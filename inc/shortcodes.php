@@ -267,7 +267,7 @@ function aurora_star_sc_code( $atts, $content = '' ) {
 	$atts = shortcode_atts(
 		array(
 			'lang' => '',
-			'line' => 'false',
+			'line' => 'auto',
 		),
 		$atts,
 		'code'
@@ -284,8 +284,11 @@ function aurora_star_sc_code( $atts, $content = '' ) {
 	$cls  = 'language-' . ( $lang ? $lang : 'markup' );
 	$extra = '';
 
+	// line 属性：true=强制显示行号，false=强制隐藏，auto/未指定=跟随全局设置。
 	if ( 'true' === $atts['line'] ) {
 		$extra .= ' line-numbers';
+	} elseif ( 'false' === $atts['line'] ) {
+		$extra .= ' no-line-numbers';
 	}
 
 	$code = trim( $code );

@@ -238,6 +238,40 @@ function aurora_star_customize_register( $wp_customize ) {
 		)
 	);
 
+	$wp_customize->add_setting(
+		'aurora_star_highlight_line_numbers',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_highlight_line_numbers',
+		array(
+			'label'       => __( '显示行号', 'aurora-star' ),
+			'description' => __( '代码块左侧显示行号。', 'aurora-star' ),
+			'section'     => 'aurora_star_highlight',
+			'type'        => 'checkbox',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_highlight_wrap',
+		array(
+			'default'           => false,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_highlight_wrap',
+		array(
+			'label'       => __( '代码自动换行', 'aurora-star' ),
+			'description' => __( '开启后长代码自动换行，不再横向滚动。', 'aurora-star' ),
+			'section'     => 'aurora_star_highlight',
+			'type'        => 'checkbox',
+		)
+	);
+
 	// ========== 图片灯箱 ==========
 	$wp_customize->add_section(
 		'aurora_star_lightbox',

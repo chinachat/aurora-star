@@ -183,13 +183,25 @@ function aurora_star_enqueue_highlight() {
 	}
 
 	// 插件：行号、工具栏、复制、语言标签、空白处理。
+	$line_numbers = (bool) get_theme_mod( 'aurora_star_highlight_line_numbers', true );
+
 	$plugin_files = array(
 		'normalize-whitespace' => array(),
-		'line-numbers'         => array( 'aurora-star-prism-line-numbers' ),
 		'toolbar'              => array(),
 		'show-language'        => array(),
 		'copy-to-clipboard'    => array(),
 	);
+
+	if ( $line_numbers ) {
+		// 行号插件需在 toolbar 之前加载（依赖链）。
+		$plugin_files = array(
+			'normalize-whitespace' => array(),
+			'line-numbers'         => array( 'aurora-star-prism-line-numbers' ),
+			'toolbar'              => array(),
+			'show-language'        => array(),
+			'copy-to-clipboard'    => array(),
+		);
+	}
 
 	$plugin_deps = $deps;
 	foreach ( $plugin_files as $plugin => $css ) {
@@ -199,12 +211,25 @@ function aurora_star_enqueue_highlight() {
 	}
 
 	// 高亮触发脚本。
+	$highlight_deps = array_merge( $deps, array( 'aurora-star-prism-normalize-whitespace', 'aurora-star-prism-toolbar', 'aurora-star-prism-copy-to-clipboard', 'aurora-star-prism-show-language' ) );
+	if ( $line_numbers ) {
+		$highlight_deps[] = 'aurora-star-prism-line-numbers';
+	}
 	wp_enqueue_script(
 		'aurora-star-highlight',
 		AURORA_STAR_URI . '/assets/js/highlight.js',
-		array_merge( $deps, array( 'aurora-star-prism-normalize-whitespace', 'aurora-star-prism-toolbar', 'aurora-star-prism-copy-to-clipboard', 'aurora-star-prism-show-language' ) ),
+		$highlight_deps,
 		AURORA_STAR_VERSION,
 		true
+	);
+
+	wp_localize_script(
+		'aurora-star-highlight',
+		'auroraStarHighlight',
+		array(
+			'lineNumbers' => $line_numbers,
+			'wrap'        => (bool) get_theme_mod( 'aurora_star_highlight_wrap', false ),
+		)
 	);
 
 	// 主题样式。
@@ -223,12 +248,14 @@ function aurora_star_enqueue_highlight() {
 		'1.30.0'
 	);
 
-	wp_enqueue_style(
-		'aurora-star-prism-line-numbers',
-		$prism . '/plugins/prism-line-numbers.min.css',
-		array( 'aurora-star-prism-theme' ),
-		'1.30.0'
-	);
+	if ( $line_numbers ) {
+		wp_enqueue_style(
+			'aurora-star-prism-line-numbers',
+			$prism . '/plugins/prism-line-numbers.min.css',
+			array( 'aurora-star-prism-theme' ),
+			'1.30.0'
+		);
+	}
 
 	// 高亮自定义样式。
 	wp_enqueue_style(

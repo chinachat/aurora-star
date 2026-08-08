@@ -20,6 +20,21 @@
 	box-shadow: var(--aurora-star-shadow);
 }
 
+/* 自动换行（由主题设置控制，类名由 JS 添加） */
+pre[class*="language-"].is-wrap {
+	overflow-x: hidden;
+	white-space: pre-wrap;
+	word-break: break-word;
+	word-wrap: break-word;
+}
+
+/* 换行模式与行号并存时的缩进 */
+pre[class*="language-"].is-wrap.line-numbers code {
+	white-space: pre-wrap;
+	word-break: break-word;
+	word-wrap: break-word;
+}
+
 /* 代码高亮与行号并存时的背景 */
 pre[class*="language-"].line-numbers {
 	padding-left: 3.2em;

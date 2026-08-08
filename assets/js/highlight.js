@@ -27,13 +27,34 @@
 	}
 
 	function init() {
+		// 读取主题设置（由 wp_localize_script 注入）。
+		var settings = (typeof auroraStarHighlight !== 'undefined') ? auroraStarHighlight : {};
+		var lineNumbers = settings.lineNumbers !== false;   // 默认开启
+		var wrap = !!settings.wrap;                          // 默认关闭
+
 		// 为无语言类的代码块分配默认语言，确保 Prism 能高亮。
 		var codes = document.querySelectorAll('pre code:not([class*="language-"])');
 		codes.forEach(function (code) {
 			var pre = code.closest('pre');
-			var cls = pre ? pre.className : '';
-			// Gutenberg 代码块 / 经典编辑器代码块：附加 language-markup 或自动检测。
 			code.className = (code.className ? code.className + ' ' : '') + 'language-' + detectLanguage(code);
+		});
+
+		// 行号：短码显式 line="true"/line="false"（line-numbers / no-line-numbers 类）优先；
+		// 否则按全局设置决定是否添加。
+		document.querySelectorAll('pre[class*="language-"]').forEach(function (pre) {
+			if (pre.classList.contains('no-line-numbers')) {
+				pre.classList.remove('line-numbers');
+				pre.classList.remove('no-line-numbers');
+				return;
+			}
+			if (lineNumbers && !pre.classList.contains('line-numbers')) {
+				pre.classList.add('line-numbers');
+			}
+		});
+
+		// 自动换行：按全局设置，为代码容器添加类（CSS 控制）。
+		document.querySelectorAll('pre[class*="language-"]').forEach(function (pre) {
+			pre.classList.toggle('is-wrap', wrap);
 		});
 
 		// 代码块：Prism 自动高亮。
