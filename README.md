@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.0.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.1.0-6366f1?style=flat-square)
 
 </div>
 
@@ -108,6 +108,12 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.1.0** — 搜索与备案增强
+
+- 页头新增搜索按钮与搜索面板（自动聚焦、ESC/点击外部关闭）
+- 公安备案徽章本地化（官方徽章图已自托管，零外链）
+- 新增 README 与主题预览图（screenshot.png）
 
 **v1.0.0** — 首个正式版本
 

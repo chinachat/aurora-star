@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AURORA_STAR_VERSION', '1.0.0' );
+define( 'AURORA_STAR_VERSION', '1.1.0' );
 define( 'AURORA_STAR_DIR', get_template_directory() );
 define( 'AURORA_STAR_URI', get_template_directory_uri() );
 
