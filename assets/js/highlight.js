@@ -7,6 +7,11 @@
 (function () {
 	'use strict';
 
+	// 关闭 Prism 自动高亮，由本脚本统一控制时机（避免与手动高亮竞态导致行号丢失）。
+	if (window.Prism) {
+		Prism.manual = true;
+	}
+
 	function detectLanguage(code) {
 		var text = code.textContent || '';
 		var trimmed = text.replace(/^\s+/, '');

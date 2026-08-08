@@ -174,6 +174,8 @@ function aurora_star_enqueue_highlight() {
 	// 核心 → 按依赖顺序加载。
 	$deps = array();
 	wp_enqueue_script( 'aurora-star-prism-core', $prism . '/prism-core.js', array(), '1.30.0', true );
+	// data-manual 属性：禁止 Prism 自动高亮，由 highlight.js 统一控制时机（避免行号竞态丢失）。
+	wp_script_add_data( 'aurora-star-prism-core', 'data-manual', true );
 	$deps[] = 'aurora-star-prism-core';
 
 	foreach ( $langs as $lang => $lang_deps ) {
