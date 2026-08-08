@@ -37,16 +37,24 @@
 		var lineNumbers = settings.lineNumbers !== false;   // 默认开启
 		var wrap = !!settings.wrap;                          // 默认关闭
 
-		// 为无语言类的代码块分配默认语言，确保 Prism 能高亮。
+		// 为无语言类的代码块分配默认语言，确保 Prism 能高亮（含 Gutenberg 代码块）。
 		var codes = document.querySelectorAll('pre code:not([class*="language-"])');
 		codes.forEach(function (code) {
-			var pre = code.closest('pre');
 			code.className = (code.className ? code.className + ' ' : '') + 'language-' + detectLanguage(code);
+		});
+
+		// 收集所有代码块的父级 pre（含 Gutenberg：pre 本身无 language 类）。
+		var pres = [];
+		document.querySelectorAll('pre code[class*="language-"]').forEach(function (code) {
+			var pre = code.closest('pre');
+			if (pre && pres.indexOf(pre) === -1) {
+				pres.push(pre);
+			}
 		});
 
 		// 行号：短码显式 line="true"/line="false"（line-numbers / no-line-numbers 类）优先；
 		// 否则按全局设置决定是否添加。
-		document.querySelectorAll('pre[class*="language-"]').forEach(function (pre) {
+		pres.forEach(function (pre) {
 			if (pre.classList.contains('no-line-numbers')) {
 				pre.classList.remove('line-numbers');
 				pre.classList.remove('no-line-numbers');
@@ -58,7 +66,7 @@
 		});
 
 		// 自动换行：按全局设置，为代码容器添加类（CSS 控制）。
-		document.querySelectorAll('pre[class*="language-"]').forEach(function (pre) {
+		pres.forEach(function (pre) {
 			pre.classList.toggle('is-wrap', wrap);
 		});
 
@@ -68,9 +76,9 @@
 		}
 
 		// 为代码块附加语言标签（若无 toolbar 插件处理）。
-		var pres = document.querySelectorAll('pre[class*="language-"]');
 		pres.forEach(function (pre) {
-			var cls = pre.className.match(/language-([\w-]+)/);
+			var code = pre.querySelector('code');
+			var cls = code ? code.className.match(/language-([\w-]+)/) : null;
 			if (cls && !pre.querySelector('.aurora-star-lang-tag')) {
 				var lang = cls[1];
 				var isToolbarApplied = pre.closest('.code-toolbar');
