@@ -1,0 +1,12 @@
+# 系统文件
+Thumbs.db
+.DS_Store
+*.swp
+
+# 编辑器
+.idea/
+.vscode/
+*.suo
+
+# 打包产物（主题仓库不需要 zip）
+*.zip

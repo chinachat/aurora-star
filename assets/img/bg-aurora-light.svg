@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f0ff"/>
+      <stop offset="45%" stop-color="#f6f4ff"/>
+      <stop offset="100%" stop-color="#eafcf2"/>
+    </linearGradient>
+    <linearGradient id="aurora1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0"/>
+      <stop offset="35%" stop-color="#34d399" stop-opacity="0.55"/>
+      <stop offset="65%" stop-color="#60a5fa" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="aurora2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f472b6" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#c084fc" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+
+  <!-- 极光光带 -->
+  <g filter="url(#blur)">
+    <path d="M-100,620 C300,420 500,520 700,430 C900,340 1100,470 1300,380 C1450,320 1580,380 1700,330 L1700,900 L-100,900 Z" fill="url(#aurora1)" opacity="0.8"/>
+    <path d="M-100,700 C200,560 450,660 700,560 C900,470 1150,600 1400,500 C1500,460 1600,500 1700,470 L1700,900 L-100,900 Z" fill="url(#aurora2)" opacity="0.7"/>
+    <ellipse cx="300" cy="300" rx="420" ry="180" fill="#a5b4fc" opacity="0.25"/>
+    <ellipse cx="1300" cy="260" rx="380" ry="150" fill="#6ee7b7" opacity="0.2"/>
+  </g>
+
+  <!-- 近景柔光 -->
+  <ellipse cx="800" cy="820" rx="900" ry="200" fill="#ffffff" opacity="0.35" filter="url(#blur)"/>
+</svg>

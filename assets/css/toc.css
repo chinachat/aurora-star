@@ -1,0 +1,253 @@
+/* ==========================================================================
+   Aurora Star 浮动目录（TOC）
+   ========================================================================== */
+
+.aurora-star-toc {
+	position: fixed;
+	left: calc(50% + 520px);
+	top: calc(var(--aurora-star-header-h) + 48px);
+	width: 260px;
+	max-height: calc(100vh - var(--aurora-star-header-h) - 96px);
+	background: var(--aurora-star-surface);
+	border: 1px solid var(--aurora-star-border);
+	border-radius: var(--aurora-star-radius);
+	box-shadow: var(--aurora-star-shadow);
+	display: flex;
+	flex-direction: column;
+	z-index: 60;
+	overflow: hidden;
+	transform: translateX(-8px);
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+}
+
+/* 视口足够宽时显示（内容宽度 780 + 目录 260） */
+@media (min-width: 1280px) {
+	.aurora-star-toc.is-visible {
+		transform: translateX(0);
+		opacity: 1;
+		visibility: visible;
+	}
+}
+
+/* 阅读进度条 */
+.aurora-star-toc-progress {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: var(--aurora-star-surface-2);
+}
+
+.aurora-star-toc-progress-bar {
+	display: block;
+	height: 100%;
+	width: 0;
+	background: linear-gradient(90deg, var(--aurora-star-primary), #8b5cf6);
+	transition: width 0.15s linear;
+}
+
+.aurora-star-toc-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 18px;
+	border-bottom: 1px solid var(--aurora-star-border);
+}
+
+.aurora-star-toc-title {
+	font-size: 0.95em;
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--aurora-star-text);
+}
+
+.aurora-star-toc-title i {
+	color: var(--aurora-star-primary);
+}
+
+.aurora-star-toc-toggle {
+	border: none;
+	background: transparent;
+	color: var(--aurora-star-text-3);
+	cursor: pointer;
+	font-size: 0.85em;
+	padding: 4px;
+	transition: color 0.2s ease, transform 0.25s ease;
+}
+
+.aurora-star-toc-toggle:hover {
+	color: var(--aurora-star-primary);
+}
+
+/* 折叠态 */
+.aurora-star-toc.is-collapsed .aurora-star-toc-body {
+	display: none;
+}
+
+.aurora-star-toc.is-collapsed .aurora-star-toc-toggle {
+	transform: rotate(180deg);
+}
+
+/* 目录主体滚动 */
+.aurora-star-toc-body {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 10px 12px;
+	scrollbar-width: thin;
+	scrollbar-color: var(--aurora-star-border-strong) transparent;
+}
+
+.aurora-star-toc-body::-webkit-scrollbar {
+	width: 5px;
+}
+
+.aurora-star-toc-body::-webkit-scrollbar-thumb {
+	background: var(--aurora-star-border-strong);
+	border-radius: 3px;
+}
+
+.aurora-star-toc-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.aurora-star-toc-item {
+	margin: 1px 0;
+	position: relative;
+}
+
+.aurora-star-toc-list .aurora-star-toc-list {
+	margin: 2px 0 2px 0;
+}
+
+/* 有子项的项：链接预留箭头空间 */
+.aurora-star-toc-item.has-children > .aurora-star-toc-link {
+	padding-right: 24px;
+}
+
+.aurora-star-toc-link {
+	display: block;
+	padding: 5px 10px;
+	border-radius: 6px;
+	font-size: 0.85em;
+	line-height: 1.5;
+	color: var(--aurora-star-text-2);
+	border-left: 2px solid transparent;
+	transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+	word-break: break-all;
+}
+
+.aurora-star-toc-link:hover {
+	color: var(--aurora-star-primary);
+	background: var(--aurora-star-primary-soft);
+}
+
+/* 层级缩进 */
+.aurora-star-toc-item[data-depth="3"] > .aurora-star-toc-link { padding-left: 20px; }
+.aurora-star-toc-item[data-depth="4"] > .aurora-star-toc-link { padding-left: 30px; }
+.aurora-star-toc-item[data-depth="5"] > .aurora-star-toc-link { padding-left: 40px; }
+.aurora-star-toc-item[data-depth="6"] > .aurora-star-toc-link { padding-left: 50px; }
+
+/* 当前阅读章节高亮 */
+.aurora-star-toc-link.is-active {
+	color: var(--aurora-star-primary);
+	font-weight: 600;
+	border-left-color: var(--aurora-star-primary);
+	background: var(--aurora-star-primary-soft);
+}
+
+/* 父级（已展开）高亮 */
+.aurora-star-toc-item.is-parent > .aurora-star-toc-link {
+	color: var(--aurora-star-primary);
+}
+
+/* 折叠箭头：跟随链接内容流 */
+.aurora-star-toc-caret {
+	position: absolute;
+	right: 6px;
+	top: 5px;
+	z-index: 1;
+	width: 20px;
+	height: 22px;
+	border: none;
+	background: transparent;
+	color: var(--aurora-star-text-3);
+	cursor: pointer;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.7em;
+	transition: color 0.2s ease, transform 0.25s ease;
+}
+
+.aurora-star-toc-caret:hover {
+	color: var(--aurora-star-primary);
+}
+
+.aurora-star-toc-item:not(.is-collapsed) > .aurora-star-toc-caret {
+	transform: rotate(180deg);
+}
+
+/* 折叠状态：隐藏子列表 */
+.aurora-star-toc-item.is-collapsed > .aurora-star-toc-list {
+	display: none;
+}
+
+/* 移动端按钮仅在移动端显示 */
+.aurora-star-toc-mobile-btn {
+	display: none;
+}
+
+/* 移动端：底部抽屉式 */
+@media (max-width: 1279px) {
+	.aurora-star-toc {
+		position: fixed;
+		left: 16px;
+		right: 16px;
+		top: auto;
+		bottom: 16px;
+		width: auto;
+		max-height: 60vh;
+		transform: translateY(16px);
+		box-shadow: var(--aurora-star-shadow-lg);
+	}
+
+	.aurora-star-toc.is-visible {
+		transform: translateY(0);
+		opacity: 1;
+		visibility: visible;
+	}
+
+	/* 移动端浮动按钮触发 */
+	.aurora-star-toc-mobile-btn {
+		position: fixed;
+		right: 16px;
+		bottom: 16px;
+		z-index: 120;
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		border: none;
+		background: var(--aurora-star-primary);
+		color: #fff;
+		font-size: 1.1em;
+		cursor: pointer;
+		box-shadow: var(--aurora-star-shadow-lg);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		transition: transform 0.2s ease;
+	}
+
+	.aurora-star-toc-mobile-btn:hover {
+		transform: scale(1.08);
+	}
+}

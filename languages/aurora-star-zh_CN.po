@@ -1,0 +1,203 @@
+﻿msgid ""
+msgstr ""
+"Project-Id-Version: Aurora 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-08 00:00+0800\n"
+"PO-Revision-Date: 2026-08-08 00:00+0800\n"
+"Last-Translator: Aurora Team\n"
+"Language-Team: Aurora Team <aurora@example.com>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Aurora\n"
+
+msgid "% 评论"
+msgstr "% 评论"
+
+msgid "[button] [alert] [note] [tabs] [accordion] [code lang=\"php\"] [youtube id=\"\"] [icon name=\"fa-solid fa-star\"] [notice]"
+msgstr "[button] [alert] [note] [tabs] [accordion] [code lang=\"php\"] [youtube id=\"\"] [icon name=\"fa-solid fa-star\"] [notice]"
+
+msgid "© %s %s"
+msgstr "© %s %s"
+
+msgid "0 评论"
+msgstr "0 评论"
+
+msgid "1 评论"
+msgstr "1 评论"
+
+msgid "1-6，数字越大包含的标题层级越多。"
+msgstr "1-6，数字越大包含的标题层级越多。"
+
+msgid "Aurora Star 文章选项"
+msgstr "Aurora Star 文章选项"
+
+msgid "Aurora Star 主题"
+msgstr "Aurora Star 主题"
+
+msgid "Aurora Star 主题设置"
+msgstr "Aurora Star 主题设置"
+
+msgid "ICP 备案号"
+msgstr "ICP 备案号"
+
+msgid "ICP 备案链接"
+msgstr "ICP 备案链接"
+
+msgid "Okaidia（暗色）"
+msgstr "Okaidia（暗色）"
+
+msgid "按钮"
+msgstr "按钮"
+
+msgid "按时间段自动切换"
+msgstr "按时间段自动切换"
+
+msgid "暗黑"
+msgstr "暗黑"
+
+msgid "暗黑模式"
+msgstr "暗黑模式"
+
+msgid "背景"
+msgstr "背景"
+
+msgid "标签"
+msgstr "标签"
+
+msgid "标题"
+msgstr "标题"
+
+msgid "常规设置"
+msgstr "常规设置"
+
+msgid "代码高亮"
+msgstr "代码高亮"
+
+msgid "单篇文章/页面顶部是否显示特色大图。"
+msgstr "单篇文章/页面顶部是否显示特色大图。"
+
+msgid "发表评论"
+msgstr "发表评论"
+
+msgid "分页："
+msgstr "分页："
+
+msgid "高亮主题"
+msgstr "高亮主题"
+
+msgid "跟随系统"
+msgstr "跟随系统"
+
+msgid "公安备案号"
+msgstr "公安备案号"
+
+msgid "公安备案链接"
+msgstr "公安备案链接"
+
+msgid "继续阅读 %s"
+msgstr "继续阅读 %s"
+
+msgid "链接颜色"
+msgstr "链接颜色"
+
+msgid "明亮"
+msgstr "明亮"
+
+msgid "默认模式"
+msgstr "默认模式"
+
+msgid "目录层级深度"
+msgstr "目录层级深度"
+
+msgid "你的邮箱不会被公开。"
+msgstr "你的邮箱不会被公开。"
+
+msgid "启用代码高亮（Prism）"
+msgstr "启用代码高亮（Prism）"
+
+msgid "启用极光背景图"
+msgstr "启用极光背景图"
+
+msgid "启用图片点击放大"
+msgstr "启用图片点击放大"
+
+msgid "启用文章浮动目录"
+msgstr "启用文章浮动目录"
+
+msgid "浅色主题显示浅色极光，暗色主题显示暗色极光。"
+msgstr "浅色主题显示浅色极光，暗色主题显示暗色极光。"
+
+msgid "如：京ICP备00000000号。留空则不显示。"
+msgstr "如：京ICP备00000000号。留空则不显示。"
+
+msgid "如：京公网安备 11000000000000 号。留空则不显示。"
+msgstr "如：京公网安备 11000000000000 号。留空则不显示。"
+
+msgid "上一页"
+msgstr "上一页"
+
+msgid "设置"
+msgstr "设置"
+
+msgid "搜索：%s"
+msgstr "搜索：%s"
+
+msgid "提交评论"
+msgstr "提交评论"
+
+msgid "图标（Font Awesome 类名，如：fa-solid fa-home）"
+msgstr "图标（Font Awesome 类名，如：fa-solid fa-home）"
+
+msgid "图片灯箱"
+msgstr "图片灯箱"
+
+msgid "文章"
+msgstr "文章"
+
+msgid "文章目录"
+msgstr "文章目录"
+
+msgid "文章内显示特色图片"
+msgstr "文章内显示特色图片"
+
+msgid "文章字数少于该值时不显示目录。"
+msgstr "文章字数少于该值时不显示目录。"
+
+msgid "下一页"
+msgstr "下一页"
+
+msgid "显示切换按钮"
+msgstr "显示切换按钮"
+
+msgid "颜色"
+msgstr "颜色"
+
+msgid "页脚"
+msgstr "页脚"
+
+msgid "页脚版权文案"
+msgstr "页脚版权文案"
+
+msgid "页脚导航"
+msgstr "页脚导航"
+
+msgid "夜间（20:00 - 次日 6:00）自动启用暗黑模式。"
+msgstr "夜间（20:00 - 次日 6:00）自动启用暗黑模式。"
+
+msgid "允许缩放与旋转"
+msgstr "允许缩放与旋转"
+
+msgid "展开/折叠"
+msgstr "展开/折叠"
+
+msgid "主导航"
+msgstr "主导航"
+
+msgid "主题主色"
+msgstr "主题主色"
+
+msgid "最少字数显示目录"
+msgstr "最少字数显示目录"
+

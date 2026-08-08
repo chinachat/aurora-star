@@ -1,0 +1,73 @@
+/* ==========================================================================
+   Aurora Star 暗黑模式
+   通过 html[data-theme="dark"] 切换，变量覆盖实现
+   ========================================================================== */
+
+html[data-theme="dark"] {
+	--aurora-star-bg: #0f1115;
+	--aurora-star-bg-alt: #16181d;
+	--aurora-star-surface: #1b1e24;
+	--aurora-star-surface-2: #242831;
+	--aurora-star-border: #2c313a;
+	--aurora-star-border-strong: #3a404b;
+
+	--aurora-star-text: #e5e7eb;
+	--aurora-star-text-2: #b3b9c4;
+	--aurora-star-text-3: #8a91a0;
+
+	--aurora-star-header-bg: rgba(22, 24, 29, 0.92);
+	--aurora-star-header-border: #2c313a;
+
+	--aurora-star-primary-soft: rgba(99, 102, 241, 0.18);
+
+	--aurora-star-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
+	--aurora-star-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.5);
+
+	color-scheme: dark;
+}
+
+/* 页面与卡片背景统一 */
+html[data-theme="dark"] body {
+	background-color: var(--aurora-star-bg);
+}
+
+/* 代码块在暗色下使用更暗背景 */
+html[data-theme="dark"] .entry-content :not(pre) > code {
+	background: var(--aurora-star-surface-2);
+	color: #f0abfc;
+}
+
+/* 图片在暗色下略微压暗，避免刺眼 */
+html[data-theme="dark"] .entry-content img {
+	filter: brightness(0.92);
+}
+
+html[data-theme="dark"] .entry-content img:hover {
+	filter: brightness(1);
+}
+
+/* 灯箱遮罩暗色适配 */
+html[data-theme="dark"] .aurora-star-lightbox {
+	background: rgba(5, 6, 9, 0.92);
+}
+
+/* 表单控件暗色 */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+	background-color: var(--aurora-star-surface-2);
+	border-color: var(--aurora-star-border);
+	color: var(--aurora-star-text);
+}
+
+/* 过渡避免闪烁 */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .site-header,
+html[data-theme="dark"] .post-card,
+html[data-theme="dark"] .post-single,
+html[data-theme="dark"] .page-single,
+html[data-theme="dark"] .comments-area,
+html[data-theme="dark"] .site-footer,
+html[data-theme="dark"] .aurora-star-toc {
+	transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}

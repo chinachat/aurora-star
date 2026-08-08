@@ -1,0 +1,96 @@
+/* ==========================================================================
+   Aurora Star 代码高亮自定义样式（叠加在 Prism 主题之上）
+   ========================================================================== */
+
+/* 代码块容器 */
+.entry-content pre {
+	position: relative;
+	border-radius: var(--aurora-star-radius-sm);
+	font-family: var(--aurora-star-font-mono);
+	font-size: 0.9em;
+	line-height: 1.7;
+	margin: 1.5em 0;
+	padding: 18px 20px;
+	overflow-x: auto;
+	scrollbar-width: thin;
+}
+
+.entry-content pre[class*="language-"] {
+	border-radius: var(--aurora-star-radius-sm);
+	box-shadow: var(--aurora-star-shadow);
+}
+
+/* 代码高亮与行号并存时的背景 */
+pre[class*="language-"].line-numbers {
+	padding-left: 3.2em;
+}
+
+/* 行号样式 */
+pre[class*="language-"].line-numbers code,
+pre[class*="language-"].line-numbers .line-numbers-rows {
+	left: -3.2em;
+}
+
+.line-numbers .line-numbers-rows > span:before {
+	text-shadow: none;
+}
+
+/* 工具栏（复制按钮/语言标签） */
+div.code-toolbar {
+	position: relative;
+}
+
+div.code-toolbar > .toolbar {
+	position: absolute;
+	top: 8px;
+	right: 10px;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	z-index: 5;
+}
+
+div.code-toolbar:hover > .toolbar {
+	opacity: 1;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item {
+	display: inline-block;
+	margin-left: 6px;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+	color: #fff;
+	font-size: 0.75em;
+	background: rgba(255, 255, 255, 0.14);
+	padding: 4px 10px;
+	border-radius: 4px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	cursor: pointer;
+	transition: background 0.2s ease;
+	font-family: inherit;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover {
+	background: var(--aurora-star-primary);
+	text-decoration: none;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > span {
+	cursor: default;
+	background: rgba(0, 0, 0, 0.35);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+/* 复制成功反馈 */
+.toolbar-item .copy-to-clipboard-code-success {
+	color: #4ade80 !important;
+}
+
+/* 暗色下代码区边框适配 */
+html[data-theme="dark"] pre[class*="language-"] {
+	border-color: var(--aurora-star-border);
+}
