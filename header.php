@@ -57,6 +57,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</nav>
 
 		<div class="site-header__tools">
+			<button type="button" class="search-toggle" data-search-toggle aria-label="<?php esc_attr_e( '搜索', 'aurora-star' ); ?>" aria-expanded="false">
+				<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+			</button>
+
 			<?php if ( get_theme_mod( 'aurora_star_dark_toggle', true ) ) : ?>
 				<button type="button" class="dark-toggle" data-dark-toggle aria-label="<?php esc_attr_e( '切换暗黑模式', 'aurora-star' ); ?>">
 					<i class="fa-solid fa-moon" aria-hidden="true"></i>
@@ -68,6 +72,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<i class="fa-solid fa-bars" aria-hidden="true"></i>
 			</button>
 		</div>
+	</div>
+
+	<div class="header-search" data-header-search aria-hidden="true">
+		<form role="search" method="get" class="header-search__form" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+			<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+			<input type="search" class="header-search__input" placeholder="<?php esc_attr_e( '输入关键词搜索…', 'aurora-star' ); ?>" value="<?php echo esc_attr( get_search_query() ); ?>" name="s" autocomplete="off" />
+			<button type="submit" class="header-search__submit"><?php esc_html_e( '搜索', 'aurora-star' ); ?></button>
+			<button type="button" class="header-search__close" data-search-close aria-label="<?php esc_attr_e( '关闭搜索', 'aurora-star' ); ?>">
+				<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+			</button>
+		</form>
 	</div>
 </header>
 

@@ -482,10 +482,12 @@ function aurora_star_footer_copyright() {
 	$police = get_theme_mod( 'aurora_star_police', '' );
 	if ( $police ) {
 		$police_url = get_theme_mod( 'aurora_star_police_link', '' );
+		$badge_url  = get_template_directory_uri() . '/assets/img/police-logo.png';
+		$badge_html = '<img class="aurora-police-logo" src="' . esc_url( $badge_url ) . '" alt="' . esc_attr__( '公安备案', 'aurora-star' ) . '" /> ';
 		if ( $police_url ) {
-			$links[] = '<a href="' . esc_url( $police_url ) . '" target="_blank" rel="nofollow"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> ' . esc_html( $police ) . '</a>';
+			$links[] = '<a class="aurora-police" href="' . esc_url( $police_url ) . '" target="_blank" rel="nofollow">' . $badge_html . esc_html( $police ) . '</a>';
 		} else {
-			$links[] = '<span class="aurora-police"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> ' . esc_html( $police ) . '</span>';
+			$links[] = '<span class="aurora-police">' . $badge_html . esc_html( $police ) . '</span>';
 		}
 	}
 

@@ -205,8 +205,58 @@
 		}
 	}
 
+	// 页头搜索按钮与搜索面板。
+	function initHeaderSearch() {
+		var toggle = document.querySelector('[data-search-toggle]');
+		var panel = document.querySelector('[data-header-search]');
+		var closeBtn = document.querySelector('[data-search-close]');
+		var input = document.querySelector('.header-search__input');
+
+		if (!toggle || !panel) {
+			return;
+		}
+
+		function setOpen(open) {
+			panel.classList.toggle('is-open', open);
+			toggle.classList.toggle('is-active', open);
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+			if (open && input) {
+				setTimeout(function () { input.focus(); }, 60);
+			}
+		}
+
+		toggle.addEventListener('click', function (e) {
+			e.stopPropagation();
+			setOpen(!panel.classList.contains('is-open'));
+		});
+
+		if (closeBtn) {
+			closeBtn.addEventListener('click', function () {
+				setOpen(false);
+			});
+		}
+
+		// 点击面板外部关闭。
+		document.addEventListener('click', function (e) {
+			if (panel.classList.contains('is-open') &&
+				!panel.contains(e.target) && e.target !== toggle) {
+				setOpen(false);
+			}
+		});
+
+		// ESC 关闭。
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+				setOpen(false);
+				toggle.focus();
+			}
+		});
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
 		initNav();
 		initFloatingNav();
+		initHeaderSearch();
 	});
 })();

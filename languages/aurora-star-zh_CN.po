@@ -90,6 +90,9 @@ msgstr "高亮主题"
 msgid "跟随系统"
 msgstr "跟随系统"
 
+msgid "公安备案"
+msgstr "公安备案"
+
 msgid "公安备案号"
 msgstr "公安备案号"
 

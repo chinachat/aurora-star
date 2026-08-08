@@ -449,6 +449,122 @@ th {
 html[data-theme="dark"] .dark-toggle .fa-sun { display: inline-block; }
 html[data-theme="dark"] .dark-toggle .fa-moon { display: none; }
 
+/* 搜索按钮 */
+.search-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border: 1px solid var(--aurora-star-border);
+	background: var(--aurora-star-surface);
+	color: var(--aurora-star-text-2);
+	border-radius: 50%;
+	cursor: pointer;
+	font-size: 1em;
+	transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.search-toggle:hover,
+.search-toggle.is-active {
+	color: var(--aurora-star-primary);
+	border-color: var(--aurora-star-primary);
+}
+
+/* 页头搜索面板 */
+.header-search {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 100%;
+	background: var(--aurora-star-surface);
+	border-bottom: 1px solid var(--aurora-star-border);
+	box-shadow: var(--aurora-star-shadow);
+	padding: 16px 20px;
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-8px);
+	transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+	z-index: 90;
+}
+
+.header-search.is-open {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+
+.header-search__form {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: var(--aurora-star-container);
+	margin: 0 auto;
+	background: var(--aurora-star-surface-2);
+	border: 1px solid var(--aurora-star-border);
+	border-radius: var(--aurora-star-radius-sm);
+	padding: 6px 6px 6px 16px;
+}
+
+.header-search__form i {
+	color: var(--aurora-star-text-3);
+}
+
+.header-search__input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	padding: 8px 0;
+	font-size: 1em;
+	color: var(--aurora-star-text);
+	font-family: inherit;
+}
+
+.header-search__input:focus {
+	outline: none;
+}
+
+.header-search__submit {
+	border: none;
+	background: var(--aurora-star-primary);
+	color: #fff;
+	padding: 8px 22px;
+	border-radius: var(--aurora-star-radius-sm);
+	font-size: 0.92em;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.2s ease;
+	font-family: inherit;
+}
+
+.header-search__submit:hover {
+	opacity: 0.9;
+}
+
+.header-search__close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: transparent;
+	color: var(--aurora-star-text-3);
+	border-radius: 50%;
+	cursor: pointer;
+	font-size: 0.95em;
+	transition: color 0.2s ease, background 0.2s ease;
+}
+
+.header-search__close:hover {
+	color: var(--aurora-star-primary);
+	background: var(--aurora-star-primary-soft);
+}
+
+html[data-theme="dark"] .header-search {
+	background: var(--aurora-star-surface-2);
+}
+
 /* ==========================================================================
    页脚
    ========================================================================== */
@@ -481,6 +597,33 @@ html[data-theme="dark"] .dark-toggle .fa-moon { display: none; }
 	text-align: center;
 	color: var(--aurora-star-text-3);
 	font-size: 0.875em;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 4px 8px;
+}
+
+.site-footer__copyright a {
+	color: var(--aurora-star-text-3);
+}
+
+.site-footer__copyright a:hover {
+	color: var(--aurora-star-primary);
+}
+
+/* 公安备案徽章 */
+.aurora-police {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.aurora-police-logo {
+	width: 16px;
+	height: auto;
+	vertical-align: middle;
+	margin-right: 2px;
 }
 
 /* ==========================================================================
