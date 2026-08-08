@@ -35,19 +35,64 @@ pre[class*="language-"].is-wrap.line-numbers code {
 	word-wrap: break-word;
 }
 
-/* 代码高亮与行号并存时的背景 */
-pre[class*="language-"].line-numbers {
-	padding-left: 3.2em;
+/* ---------- 行号（通用，兼容 Gutenberg 代码块 pre 无 language 类的情况） ---------- */
+
+/* 行号容器：为行号留出左侧空间。
+   Prism 官方 CSS 要求 pre[class*=language-]，对 Gutenberg 的 pre.wp-block-code 不生效，
+   此处补充通用规则。 */
+pre.line-numbers {
+	position: relative;
+	padding-left: 3.8em;
+	counter-reset: linenumber;
 }
 
-/* 行号样式 */
-pre[class*="language-"].line-numbers code,
-pre[class*="language-"].line-numbers .line-numbers-rows {
+/* code 内容正常继承 */
+pre.line-numbers > code {
+	position: relative;
+	white-space: inherit;
+}
+
+/* 行号行绝对定位在左侧预留区。
+   注意：行号行由 Prism 插件 append 到 code 内部，需对齐 code 内容区。 */
+.line-numbers .line-numbers-rows {
+	position: absolute;
+	pointer-events: none;
+	top: 0;
+	font-size: 100%;
+	left: -3.2em;
+	width: 3em;
+	letter-spacing: -1px;
+	border-right: 1px solid rgba(128, 128, 128, 0.3);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.line-numbers-rows > span {
+	display: block;
+	counter-increment: linenumber;
+}
+
+.line-numbers-rows > span:before {
+	content: counter(linenumber);
+	color: #999;
+	display: block;
+	padding-right: 0.8em;
+}
+
+/* 行号加在 code 内部时，需要覆盖 .entry-content pre 的 padding 使行号可见 */
+pre.line-numbers code .line-numbers-rows {
 	left: -3.2em;
 }
 
-.line-numbers .line-numbers-rows > span:before {
-	text-shadow: none;
+/* 兼容：短码代码块（pre 有 language 类）行号 */
+pre[class*="language-"].line-numbers {
+	padding-left: 3.8em;
+}
+
+pre[class*="language-"].line-numbers > code .line-numbers-rows {
+	left: -3.2em;
 }
 
 /* 工具栏（复制按钮/语言标签） */
