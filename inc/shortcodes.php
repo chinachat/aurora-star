@@ -41,7 +41,8 @@ function aurora_star_trim_block_breaks( $html ) {
 function aurora_star_clean_attr( $value ) {
 	$value = html_entity_decode( (string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
-	return trim( $value, " \t\n\r\0\x0B\"'" );
+	// 直引号与弯引号都去掉：从 Word / 文档里粘来的属性常带着 “ ” ‘ ’。
+	return trim( $value, " \t\n\r\0\x0B\"'“”‘’" );
 }
 
 /**
@@ -85,11 +86,18 @@ function aurora_star_sc_button( $atts, $content = '' ) {
 
 	$extra_class = aurora_star_clean_attr( $atts['class'] );
 
+	// href 也要走 clean_attr：属性被实体转义（&quot;）或被引号包住时，
+	// esc_url() 会直接甩掉整个值，按钮就变成 href="" 点不动。
+	$href = aurora_star_clean_attr( $atts['href'] );
+	if ( '' === $href ) {
+		$href = '#';
+	}
+
 	$class = 'aurora-star-btn aurora-star-btn-' . sanitize_html_class( aurora_star_clean_attr( $atts['color'] ) )
 		. ' aurora-star-btn-' . sanitize_html_class( aurora_star_clean_attr( $atts['size'] ) )
 		. ( $extra_class ? ' ' . esc_attr( $extra_class ) : '' );
 
-	return '<a class="' . $class . '" href="' . esc_url( $atts['href'] ) . '"' . $target . $rel . '>' . $icon . '<span>' . $content . '</span></a>';
+	return '<a class="' . $class . '" href="' . esc_url( $href ) . '"' . $target . $rel . '>' . $icon . '<span>' . $content . '</span></a>';
 }
 add_shortcode( 'button', 'aurora_star_sc_button' );
 add_shortcode( 'btn', 'aurora_star_sc_button' );

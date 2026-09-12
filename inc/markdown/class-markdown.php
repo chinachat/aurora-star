@@ -23,7 +23,7 @@ if ( class_exists( 'Mdp_Markdown', false ) ) {
 class Mdp_Markdown {
 
 	/** 解析器版本（用于判断文章是否需要重新渲染）。 */
-	const VERSION = '1.0.1';
+	const VERSION = '1.0.2';
 
 	/** 行内占位符分隔符。 */
 	const PH = "\x1A";
@@ -1167,12 +1167,47 @@ class Mdp_Markdown {
 		$text = $this->protectEscapes( $text, $ph );
 		$text = $this->protectRawHtml( $text, $ph, $depth );
 		$text = $this->protectFootnoteRefs( $text, $ph );
+		// 必须在 protectLinks 之前：否则短码属性里的裸 URL 会被自动转成 <a>，
+		// [button href="https://…"] 就被拆散，do_shortcode 再也读不到 href。
+		$text = $this->protectShortcodeTags( $text, $ph );
 		$text = $this->protectLinks( $text, $ph, $depth );
 		$text = $this->escapeText( $text );
 		$text = $this->parseEmphasis( $text );
 		$text = $this->applyBreaks( $text );
 
 		return $this->restore( $text, $ph );
+	}
+
+	/**
+	 * 保护短码标签，避免被行内 Markdown 语法改写。
+	 *
+	 * 解析器不依赖 WordPress，拿不到已注册的短码表，所以按形状判断：
+	 *   [/name]                 闭标签
+	 *   [name …attr…]           开标签（含空格 → 带属性）
+	 *   [name/]                 自闭合
+	 *
+	 * 刻意**不**匹配裸标签 `[name]`，也**不**匹配后面紧跟 `(` 或 `[` 的方括号，
+	 * 这样才能放行 Markdown 自己的链接语法：
+	 *   [文字](url)   [文字][ref]   ![图](url)
+	 *
+	 * @param string $text 文本。
+	 * @param array  $ph   占位符表（引用）。
+	 * @return string
+	 */
+	protected function protectShortcodeTags( $text, &$ph ) {
+		if ( false === strpos( $text, '[' ) ) {
+			return $text;
+		}
+
+		$result = preg_replace_callback(
+			'#\[(?:/[A-Za-z_][A-Za-z0-9_-]*|[A-Za-z_][A-Za-z0-9_-]*[ \t][^\[\]]*|[A-Za-z_][A-Za-z0-9_-]*/)\](?![\(\[])#',
+			function ( $m ) use ( &$ph ) {
+				return $this->placeholder( $m[0], $ph );
+			},
+			$text
+		);
+
+		return ( null === $result ) ? $text : $result;
 	}
 
 	/**

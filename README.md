@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-2.2.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.2.1-6366f1?style=flat-square)
 
 </div>
 
@@ -209,6 +209,32 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.2.1** — 修复 `[button]` 等短码在 Markdown 文章里链接失效
+
+- **修复**（严重）Markdown 文章里写 `[button href="https://example.com"]查看[/button]`，
+  按钮渲染出来却是 `href="#"`，点了没反应。原因是解析器的**自动链接**把属性里的裸 URL
+  转成了 `<a>`：
+
+  ```html
+  渲染后: <p>[button href="<a href="https://example.com">https://example.com</a>"]查看[/button]</p>
+  结果:   <a class="aurora-star-btn …" href="#">
+  ```
+
+  `shortcode_parse_atts()` 再也读不到 `href`，于是回退成默认的 `#`。
+  相对路径 `/about` 和锚点 `#top` 不受影响——它们没有协议头，不会被自动链接
+- **修复** 解析器现在会先**保护短码标签**再走行内语法。按形状判断（不依赖 WordPress
+  的短码表）：`[/name]`、`[name …属性…]`、`[name/]`；刻意**不**匹配裸标签 `[name]`，
+  也**不**匹配后面紧跟 `(` 或 `[` 的方括号，因此 Markdown 自己的链接语法完全不受影响
+  （`[文字](url)`、`[点 击这里](url)`、`[文字][ref]`、`[ref]`、`![图](url)` 全部照常）
+- **修复** `[button]` 的 `href` 是唯一没走 `aurora_star_clean_attr()` 的属性，
+  被 `&quot;` 转义或被引号包住时 `esc_url()` 会直接甩掉整个值 → `href=""`。
+  现在与其它属性一致；顺带把**弯引号**（`“ ” ‘ ’`，从 Word / 文档里粘来）也一并去掉
+- **注意**：解析器版本升到 **1.0.2**，**旧文章需要重新渲染**才会拿到修复
+  （后台会提示「解析器已更新」，到 **Markdown 发布 → 批量重新渲染** 跑一次即可）
+- **验证** 新增 `test-shortcode-markdown.php`（27 项）：短码原样保留、属性里的 URL
+  不被自动链接、Markdown 链接语法全部放行、方括号外的裸 URL 仍自动链接；
+  短代码套件新增 R13–R15 覆盖 `href` 的各种写法
 
 **v2.2.0** — 默认特色图：没有特色图时自动回退
 
