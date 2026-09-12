@@ -331,8 +331,9 @@ add_shortcode( 'code', 'aurora_star_sc_code' );
  * 换行变成 <br />、空行变成 </p><p>，等 [code] 执行时这些标记已被 htmlspecialchars
  * 转义，于是代码块里会混入字面量的 <br /> 和 </p>。
  *
- * 这里在优先级 9（早于 wpautop）先把内容 base64 化，内容变成单行、不含换行，
- * wpautop 便无从下手；短码执行时再解码还原。
+ * 这里在优先级 8（早于同挂在 9 的 do_blocks 与标题锚点过滤器）先做替换：
+ * 内容变成单行、不含换行，wpautop 无从下手，其它基于正则改 HTML 的过滤器
+ * （例如给正文标题补目录锚点的 aurora_star_heading_ids）也不会误伤代码示例。
  *
  * @param string $content 文章内容。
  * @return string
@@ -347,13 +348,13 @@ function aurora_star_protect_code_shortcode( $content ) {
 		function ( $matches ) {
 			$atts = isset( $matches[1] ) ? $matches[1] : '';
 
-			// 用 base64 承载原文，避免 wpautop 改动内容。
+			// 用 base64 承载原文，避免被 wpautop 或其它过滤器改动。
 			return '[aurora_star_code' . $atts . ']' . base64_encode( $matches[2] ) . '[/aurora_star_code]';
 		},
 		$content
 	);
 }
-add_filter( 'the_content', 'aurora_star_protect_code_shortcode', 9 );
+add_filter( 'the_content', 'aurora_star_protect_code_shortcode', 8 );
 
 /**
  * 内部占位短码：解码后交给 [code] 的处理函数。

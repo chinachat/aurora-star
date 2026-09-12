@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.1-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.2-6366f1?style=flat-square)
 
 </div>
 
@@ -202,6 +202,16 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.5.2** — 修复 `[code]` 与目录锚点的冲突
+
+- **修复** 代码示例被「标题补锚点」功能污染：`aurora_star_heading_ids` 也在
+  `the_content` 优先级 9，而它注册更早（`setup.php` 先加载），因此会先于
+  `[code]` 保护过滤器执行，把代码示例里的 `<h2>` 当成真标题、注入
+  `id="aurora-star-toc-N-…"`。现在保护过滤器提到优先级 **8**，早于 `do_blocks`
+  与标题锚点，代码示例不再被改动，目录编号也不会被代码里的标题挤占
+- 顺带一并避免了 `wptexturize` 把代码里的引号变成弯引号、`...` 变成省略号、
+  `--` 变成破折号，以及 `convert_smilies` 把 `:-)` 变成表情图
 
 **v1.5.1** — 修复短代码布局问题
 
