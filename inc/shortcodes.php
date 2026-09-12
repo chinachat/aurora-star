@@ -10,6 +10,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * 去掉块级短码内容首尾由 wpautop 插入的换行标记。
+ *
+ * wpautop 会把短码内容里的换行转成 <br />。对于块级短码（tabs 面板、手风琴内容、
+ * 提示框正文），这些 <br /> 只会在区块上下顶出多余空白，因此需要在首尾剔除；
+ * 中间的 <br /> 属于正文换行，必须保留。
+ *
+ * @param string $html 内容 HTML。
+ * @return string
+ */
+function aurora_star_trim_block_breaks( $html ) {
+	$html = trim( (string) $html );
+
+	// 去掉首尾连续的 <br> / <br/> / <br />（含其间的空白）。
+	$html = preg_replace( '#^(?:\s*<br\s*/?>\s*)+#i', '', $html );
+	$html = preg_replace( '#(?:\s*<br\s*/?>\s*)+$#i', '', $html );
+
+	return $html;
+}
+
+/**
  * [button] 按钮。
  * 用法：[button href="https://example.com" color="primary" size="md" target="_blank" rel="nofollow"]文字[/button]
  *
@@ -83,7 +103,7 @@ function aurora_star_sc_alert( $atts, $content = '' ) {
 		$title = '<div class="aurora-star-alert-title"><i class="' . $icons[ $type ] . '"></i> ' . esc_html( $atts['title'] ) . '</div>';
 	}
 
-	return '<div class="aurora-star-alert aurora-star-alert-' . $type . '">' . $title . '<div class="aurora-star-alert-body">' . do_shortcode( $content ) . '</div></div>';
+	return '<div class="aurora-star-alert aurora-star-alert-' . $type . '">' . $title . '<div class="aurora-star-alert-body">' . do_shortcode( aurora_star_trim_block_breaks( $content ) ) . '</div></div>';
 }
 add_shortcode( 'alert', 'aurora_star_sc_alert' );
 add_shortcode( 'tip', 'aurora_star_sc_alert' );
@@ -107,7 +127,7 @@ function aurora_star_sc_note( $atts, $content = '' ) {
 
 	$title = $atts['title'] ? '<div class="aurora-star-note-title">' . esc_html( $atts['title'] ) . '</div>' : '';
 
-	return '<div class="aurora-star-note">' . $title . '<div class="aurora-star-note-body">' . do_shortcode( $content ) . '</div></div>';
+	return '<div class="aurora-star-note">' . $title . '<div class="aurora-star-note-body">' . do_shortcode( aurora_star_trim_block_breaks( $content ) ) . '</div></div>';
 }
 add_shortcode( 'note', 'aurora_star_sc_note' );
 
@@ -172,7 +192,7 @@ function aurora_star_sc_tabs( $atts, $content = '' ) {
 		$panes .= '<div class="aurora-star-tabs-pane' . ( $is_act ? ' is-active' : '' ) . '"'
 			. ' id="' . esc_attr( $pane_id ) . '" role="tabpanel"'
 			. ' aria-labelledby="' . esc_attr( $tab_id ) . '" tabindex="0">'
-			. do_shortcode( $match[5] ) . '</div>';
+			. do_shortcode( aurora_star_trim_block_breaks( $match[5] ) ) . '</div>';
 	}
 
 	$nav  .= '</div>';
@@ -235,7 +255,7 @@ function aurora_star_sc_accordion( $atts, $content = '' ) {
 		$html .= '<div class="aurora-star-accordion-body" id="' . esc_attr( $body_id ) . '"'
 			. ' role="region" aria-labelledby="' . esc_attr( $head_id ) . '">';
 		// 内层容器提供内边距（见 main.css 的 .aurora-star-accordion-body-inner）。
-		$html .= '<div class="aurora-star-accordion-body-inner">' . do_shortcode( $match[5] ) . '</div>';
+		$html .= '<div class="aurora-star-accordion-body-inner">' . do_shortcode( aurora_star_trim_block_breaks( $match[5] ) ) . '</div>';
 		$html .= '</div></div>';
 	}
 	$html .= '</div>';
@@ -302,6 +322,52 @@ function aurora_star_sc_code( $atts, $content = '' ) {
 	return '<pre class="' . esc_attr( $cls . $extra ) . '"><code class="' . esc_attr( $cls ) . '">' . $code . '</code></pre>';
 }
 add_shortcode( 'code', 'aurora_star_sc_code' );
+
+/**
+ * wpautop 之前把 [code] 的内容换成不含换行的 base64 占位短码。
+ *
+ * 背景：the_content 上的优先级是 wptexturize(10) → wpautop(10) → shortcode_unautop(10)
+ * → do_shortcode(11)，也就是 wpautop 在短码展开**之前**就跑了。它会把代码里的
+ * 换行变成 <br />、空行变成 </p><p>，等 [code] 执行时这些标记已被 htmlspecialchars
+ * 转义，于是代码块里会混入字面量的 <br /> 和 </p>。
+ *
+ * 这里在优先级 9（早于 wpautop）先把内容 base64 化，内容变成单行、不含换行，
+ * wpautop 便无从下手；短码执行时再解码还原。
+ *
+ * @param string $content 文章内容。
+ * @return string
+ */
+function aurora_star_protect_code_shortcode( $content ) {
+	if ( false === strpos( $content, '[code' ) ) {
+		return $content;
+	}
+
+	return preg_replace_callback(
+		'/\[code(\s[^\]]*)?\](.*?)\[\/code\]/is',
+		function ( $matches ) {
+			$atts = isset( $matches[1] ) ? $matches[1] : '';
+
+			// 用 base64 承载原文，避免 wpautop 改动内容。
+			return '[aurora_star_code' . $atts . ']' . base64_encode( $matches[2] ) . '[/aurora_star_code]';
+		},
+		$content
+	);
+}
+add_filter( 'the_content', 'aurora_star_protect_code_shortcode', 9 );
+
+/**
+ * 内部占位短码：解码后交给 [code] 的处理函数。
+ *
+ * @param array  $atts    短码属性。
+ * @param string $content base64 内容。
+ * @return string
+ */
+function aurora_star_sc_code_encoded( $atts, $content = '' ) {
+	$decoded = base64_decode( (string) $content, true );
+
+	return aurora_star_sc_code( $atts, false === $decoded ? '' : $decoded );
+}
+add_shortcode( 'aurora_star_code', 'aurora_star_sc_code_encoded' );
 
 /**
  * [youtube] 视频。
@@ -376,6 +442,6 @@ add_shortcode( 'icon', 'aurora_star_sc_icon' );
  * @return string
  */
 function aurora_star_sc_notice( $atts, $content = '' ) {
-	return '<div class="aurora-star-notice">' . do_shortcode( $content ) . '</div>';
+	return '<div class="aurora-star-notice">' . do_shortcode( aurora_star_trim_block_breaks( $content ) ) . '</div>';
 }
 add_shortcode( 'notice', 'aurora_star_sc_notice' );

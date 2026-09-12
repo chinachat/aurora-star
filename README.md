@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.1-6366f1?style=flat-square)
 
 </div>
 
@@ -202,6 +202,20 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.5.1** — 修复短代码布局问题
+
+- **修复** `[code]` **多行代码被破坏**（严重）：`wpautop` 在 `do_shortcode` 之前运行，
+  会把代码里的换行变成 `<br />`、空行变成 `</p><p>`；这些标记随后被转义成字面量，
+  于是代码块里显示成 `<br />` 与 `</p>` 垃圾文本。现改为在 `wpautop` 之前
+  把 `[code]` 内容 base64 化，短码执行时再还原 —— 换行与空行均原样保留
+- **修复** 嵌套在 `[tabs]` / `[accordion]` / `[alert]` 里的块级短码，
+  其区块首尾会被 `wpautop` 顶出多余的 `<br />`（多出空白行）
+- **验证** 新增 43 项短代码测试，用**真实的 WordPress 核心函数**
+  （`wpautop` / `shortcode_unautop` / `do_shortcode` / `wptexturize` / `do_blocks`）
+  按真实优先级顺序跑完整 `the_content` 管线，覆盖单行/多行/含空行/内嵌 HTML 的
+  `[code]`、嵌套在 tabs 与 alert 中的代码块、区块编辑器短码块、
+  相邻块级短码、以及占位短码不泄漏
 
 **v1.5.0** — 页脚重构与友情链接
 
