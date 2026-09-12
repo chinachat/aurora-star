@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.2-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.3-6366f1?style=flat-square)
 
 </div>
 
@@ -202,6 +202,21 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.5.3** — 不让代码块里的短码被执行
+
+- **修复** `[button]` / `[code]` / `[youtube]` 等短码写在 `<pre>` 代码块里时会被真的执行，
+  代码示例因此变成渲染后的 UI。WordPress 核心并不保护 `<pre>` 内的短码，
+  Gutenberg 代码块、Markdown 插件输出的代码块、粘贴的文档都会踩到。
+  现于 `the_content` 优先级 8 把 `<pre>` 内的 `[` `]` 转义为实体：
+  页面仍显示为 `[` `]`，但 `do_shortcode` 不再匹配
+- **修复** 短码属性里的引号被转义成 `&quot;` 时产生垃圾值：
+  `lang="&quot;python&quot;"` 会得到 `language-quotpythonquot`（无效类名、无法高亮），
+  `color="&quot;primary&quot;"` 会得到 `aurora-star-btn-quotprimaryquot`。
+  现先还原 HTML 实体再去掉包裹的引号，覆盖 `[code]` 的 `lang`、`[button]` 的
+  `color`/`size`/`target`/`rel`/`class`/`icon`、`[icon]` 的 `name`/`size`/`color`
+- **验证** 新增 7 项针对 https://8u8.club 线上页面实际问题的复现用例，
+  短代码测试增至 73 项；其余修复均确认不会误伤正文里正常使用的短码
 
 **v1.5.2** — 修复 `[code]` 与目录锚点的冲突
 

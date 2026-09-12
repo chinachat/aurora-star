@@ -159,7 +159,11 @@ add_action( 'wp_enqueue_scripts', 'aurora_star_enqueue_scripts' );
  * @return string 归一化后的组件名。
  */
 function aurora_star_normalize_prism_language( $lang ) {
-	$lang = strtolower( trim( (string) $lang ) );
+	// 短码属性可能来自被 HTML 转义的正文（例如 &quot;php&quot;），
+	// 若不解码会得到 language-quotphpquot 这种无效类名。
+	$lang = html_entity_decode( (string) $lang, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	$lang = strtolower( trim( $lang, " \t\n\r\0\x0B\"'" ) );
+
 	if ( '' === $lang ) {
 		return '';
 	}

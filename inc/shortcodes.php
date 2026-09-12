@@ -30,6 +30,21 @@ function aurora_star_trim_block_breaks( $html ) {
 }
 
 /**
+ * 清理短码属性值：还原 HTML 实体并去掉包裹的引号。
+ *
+ * 从 Markdown / 富文本粘贴进 WordPress 的正文里，引号常被转义为 &quot;。
+ * 直接把这些值交给 sanitize_html_class() 会得到 quotprimaryquot 这种无意义结果。
+ *
+ * @param string $value 属性值。
+ * @return string
+ */
+function aurora_star_clean_attr( $value ) {
+	$value = html_entity_decode( (string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+
+	return trim( $value, " \t\n\r\0\x0B\"'" );
+}
+
+/**
  * [button] 按钮。
  * 用法：[button href="https://example.com" color="primary" size="md" target="_blank" rel="nofollow"]文字[/button]
  *
@@ -58,14 +73,21 @@ function aurora_star_sc_button( $atts, $content = '' ) {
 	}
 
 	$icon = '';
-	if ( $atts['icon'] ) {
-		$icon = '<i class="aurora-star-sc-btn-icon ' . esc_attr( $atts['icon'] ) . '" aria-hidden="true"></i>';
+	if ( aurora_star_clean_attr( $atts['icon'] ) ) {
+		$icon = '<i class="aurora-star-sc-btn-icon ' . esc_attr( aurora_star_clean_attr( $atts['icon'] ) ) . '" aria-hidden="true"></i>';
 	}
 
-	$target = $atts['target'] ? ' target="' . esc_attr( $atts['target'] ) . '"' : '';
-	$rel    = $atts['rel'] ? ' rel="' . esc_attr( $atts['rel'] ) . '"' : '';
+	$target = aurora_star_clean_attr( $atts['target'] );
+	$target = $target ? ' target="' . esc_attr( $target ) . '"' : '';
 
-	$class = 'aurora-star-btn aurora-star-btn-' . sanitize_html_class( $atts['color'] ) . ' aurora-star-btn-' . sanitize_html_class( $atts['size'] ) . ( $atts['class'] ? ' ' . esc_attr( $atts['class'] ) : '' );
+	$rel = aurora_star_clean_attr( $atts['rel'] );
+	$rel = $rel ? ' rel="' . esc_attr( $rel ) . '"' : '';
+
+	$extra_class = aurora_star_clean_attr( $atts['class'] );
+
+	$class = 'aurora-star-btn aurora-star-btn-' . sanitize_html_class( aurora_star_clean_attr( $atts['color'] ) )
+		. ' aurora-star-btn-' . sanitize_html_class( aurora_star_clean_attr( $atts['size'] ) )
+		. ( $extra_class ? ' ' . esc_attr( $extra_class ) : '' );
 
 	return '<a class="' . $class . '" href="' . esc_url( $atts['href'] ) . '"' . $target . $rel . '>' . $icon . '<span>' . $content . '</span></a>';
 }
@@ -354,7 +376,50 @@ function aurora_star_protect_code_shortcode( $content ) {
 		$content
 	);
 }
-add_filter( 'the_content', 'aurora_star_protect_code_shortcode', 8 );
+/**
+ * 把 <pre> 内的短码语法转义，避免被 do_shortcode 执行。
+ *
+ * WordPress 核心并不会保护 <pre> 里的短码。当正文里出现
+ * `<pre><code>[button href="…"]…[/button]</code></pre>`（Markdown 插件、Gutenberg
+ * 代码块、或直接粘贴的文档）时，短码会被真的执行，代码示例因此变成渲染后的 UI。
+ * 若属性里的引号已被转义（&quot;），还会解析出 `quotprimaryquot` 这种垃圾类名。
+ *
+ * <pre> 是预格式文本，里面的方括号只应作为文字显示，因此这里把 [ ] 转成实体；
+ * 浏览器仍显示为 [ ]，但 do_shortcode 不再匹配。
+ *
+ * @param string $content 文章内容。
+ * @return string
+ */
+function aurora_star_escape_pre_content( $content ) {
+	if ( false === stripos( $content, '<pre' ) ) {
+		return $content;
+	}
+
+	return preg_replace_callback(
+		'#<pre\b[^>]*>.*?</pre>#is',
+		function ( $matches ) {
+			return str_replace( array( '[', ']' ), array( '&#91;', '&#93;' ), $matches[0] );
+		},
+		$content
+	);
+}
+
+/**
+ * 在 wpautop / do_shortcode 之前统一保护正文里的代码内容。
+ *
+ * 顺序很重要：先转义 <pre> 内的方括号，再处理 [code] 短码。
+ * 反过来的话，写在 <pre> 里的 [code] 会先被换成占位短码，随后仍会被执行。
+ *
+ * @param string $content 文章内容。
+ * @return string
+ */
+function aurora_star_protect_content( $content ) {
+	$content = aurora_star_escape_pre_content( $content );
+	$content = aurora_star_protect_code_shortcode( $content );
+
+	return $content;
+}
+add_filter( 'the_content', 'aurora_star_protect_content', 8 );
 
 /**
  * 内部占位短码：解码后交给 [code] 的处理函数。
@@ -426,11 +491,13 @@ function aurora_star_sc_icon( $atts ) {
 	);
 
 	$sizes = array( 'xs', 'sm', 'lg', 'xl', '2xl', '1x', '2x', '3x', '4x', '5x' );
-	$size  = in_array( $atts['size'], $sizes, true ) ? ' fa-' . $atts['size'] : '';
+	$size  = aurora_star_clean_attr( $atts['size'] );
+	$size  = in_array( $size, $sizes, true ) ? ' fa-' . $size : '';
 
-	$color = $atts['color'] ? ' style="color:' . esc_attr( $atts['color'] ) . '"' : '';
+	$color_value = aurora_star_clean_attr( $atts['color'] );
+	$color       = $color_value ? ' style="color:' . esc_attr( $color_value ) . '"' : '';
 
-	return '<i class="' . esc_attr( $atts['name'] ) . $size . '" aria-hidden="true"' . $color . '></i>';
+	return '<i class="' . esc_attr( aurora_star_clean_attr( $atts['name'] ) ) . $size . '" aria-hidden="true"' . $color . '></i>';
 }
 add_shortcode( 'icon', 'aurora_star_sc_icon' );
 
