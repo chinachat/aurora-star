@@ -72,6 +72,7 @@ function aurora_star_setup() {
 		array(
 			'primary' => __( '主导航', 'aurora-star' ),
 			'footer'  => __( '页脚导航', 'aurora-star' ),
+			'friends' => __( '友情链接', 'aurora-star' ),
 		)
 	);
 }

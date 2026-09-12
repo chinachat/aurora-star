@@ -602,10 +602,65 @@ html[data-theme="dark"] .header-search {
 	color: var(--aurora-star-primary);
 }
 
-.site-footer__copyright {
-	text-align: center;
+/* 友情链接（分配「友情链接」菜单后显示） */
+.site-footer__friends {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: center;
+	gap: 8px 12px;
+	margin-bottom: 18px;
+	padding-bottom: 18px;
+	border-bottom: 1px solid var(--aurora-star-border);
+	font-size: 0.85em;
+}
+
+.site-footer__friends-label {
+	flex: 0 0 auto;
+	color: var(--aurora-star-text-3);
+	font-weight: 600;
+}
+
+.friends-nav {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.friends-nav li {
+	margin: 0;
+}
+
+.friends-nav a {
+	color: var(--aurora-star-text-2);
+}
+
+.friends-nav a:hover {
+	color: var(--aurora-star-primary);
+}
+
+/* 页脚信息：版权 / 备案 / 署名分三行 */
+.site-footer__info {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
 	color: var(--aurora-star-text-3);
 	font-size: 0.875em;
+	line-height: 1.7;
+	text-align: center;
+}
+
+.site-footer__info p {
+	margin: 0;
+}
+
+.site-footer__filings,
+.site-footer__credits {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -613,11 +668,19 @@ html[data-theme="dark"] .header-search {
 	gap: 4px 8px;
 }
 
-.site-footer__copyright a {
+.site-footer__sep {
+	color: var(--aurora-star-border-strong);
+}
+
+.site-footer__copyright a,
+.site-footer__filings a,
+.site-footer__credits a {
 	color: var(--aurora-star-text-3);
 }
 
-.site-footer__copyright a:hover {
+.site-footer__copyright a:hover,
+.site-footer__filings a:hover,
+.site-footer__credits a:hover {
 	color: var(--aurora-star-primary);
 }
 

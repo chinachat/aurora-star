@@ -14,6 +14,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 <footer class="site-footer">
 	<div class="container">
 		<?php
+		// 友情链接：在「外观 → 菜单」里创建菜单并分配到「友情链接」位置即可显示。
+		if ( has_nav_menu( 'friends' ) ) :
+			?>
+			<nav class="site-footer__friends" aria-label="<?php esc_attr_e( '友情链接', 'aurora-star' ); ?>">
+				<span class="site-footer__friends-label"><?php esc_html_e( '友情链接', 'aurora-star' ); ?></span>
+				<?php
+				wp_nav_menu(
+					array(
+						'theme_location' => 'friends',
+						'menu_class'     => 'friends-nav',
+						'container'      => false,
+						'walker'         => new Aurora_Walker_Nav_Menu(),
+						'depth'          => 1,
+					)
+				);
+				?>
+			</nav>
+		<?php endif; ?>
+
+		<?php
 		if ( has_nav_menu( 'footer' ) ) {
 			wp_nav_menu(
 				array(
@@ -27,17 +47,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 		}
 		?>
 
-		<div class="site-footer__copyright">
-			<?php echo wp_kses_post( aurora_star_footer_copyright() ); ?>
-			<span class="site-footer__sep">·</span>
-			<span class="site-footer__theme"><?php esc_html_e( '由 Aurora Star 极光主题驱动', 'aurora-star' ); ?></span>
+		<div class="site-footer__info">
+			<p class="site-footer__copyright">
+				<?php echo wp_kses_post( aurora_star_footer_copyright() ); ?>
+			</p>
+
 			<?php
-			$aurora_geo_credit = aurora_star_geoip_attribution_html();
-			if ( '' !== $aurora_geo_credit ) :
+			$aurora_filings = aurora_star_footer_filings_html();
+			if ( '' !== $aurora_filings ) :
 				?>
-				<span class="site-footer__sep">·</span>
-				<?php echo $aurora_geo_credit; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部已转义。 ?>
+				<p class="site-footer__filings">
+					<?php echo wp_kses_post( $aurora_filings ); ?>
+				</p>
 			<?php endif; ?>
+
+			<p class="site-footer__credits">
+				<span class="site-footer__theme"><?php echo wp_kses_post( aurora_star_footer_credits_html() ); ?></span>
+				<?php
+				$aurora_geo_credit = aurora_star_geoip_attribution_html();
+				if ( '' !== $aurora_geo_credit ) :
+					?>
+					<span class="site-footer__sep" aria-hidden="true">·</span>
+					<?php echo $aurora_geo_credit; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部已转义。 ?>
+				<?php endif; ?>
+			</p>
 		</div>
 	</div>
 </footer>

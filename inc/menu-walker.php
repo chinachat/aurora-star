@@ -162,3 +162,40 @@ function aurora_star_menu_item_icon_save( $menu_id, $menu_item_db_id ) {
 	}
 }
 add_action( 'wp_update_nav_menu_item', 'aurora_star_menu_item_icon_save', 10, 2 );
+
+/**
+ * 页脚导航与友情链接一律新标签页打开。
+ *
+ * 仅作用于分配给「页脚导航」「友情链接」位置的菜单，不影响主导航。
+ *
+ * @param array    $atts  链接属性。
+ * @param WP_Post  $item  菜单项。
+ * @param stdClass $args  参数。
+ * @param int      $depth 深度。
+ * @return array
+ */
+function aurora_star_footer_menu_new_tab( $atts, $item, $args, $depth ) {
+	$locations = array( 'footer', 'friends' );
+
+	if ( ! isset( $args->theme_location ) || ! in_array( $args->theme_location, $locations, true ) ) {
+		return $atts;
+	}
+
+	/**
+	 * 是否让页脚菜单链接在新标签页打开。
+	 *
+	 * @param bool   $new_tab 默认 true。
+	 * @param string $location 菜单位置。
+	 */
+	if ( ! apply_filters( 'aurora_star_footer_links_new_tab', true, $args->theme_location ) ) {
+		return $atts;
+	}
+
+	$atts['target'] = '_blank';
+
+	$rel         = isset( $atts['rel'] ) ? trim( (string) $atts['rel'] ) : '';
+	$atts['rel'] = trim( $rel . ' noopener noreferrer' );
+
+	return $atts;
+}
+add_filter( 'nav_menu_link_attributes', 'aurora_star_footer_menu_new_tab', 10, 4 );

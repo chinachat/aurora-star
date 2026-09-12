@@ -588,28 +588,51 @@ function aurora_star_sanitize_avatar_default( $input ) {
 }
 
 /**
- * 页脚版权（含备案信息，为空不显示）。
+ * 主题仓库地址（页脚署名用）。
+ *
+ * @return string
+ */
+function aurora_star_theme_url() {
+	/**
+	 * 过滤页脚主题署名链接。
+	 *
+	 * @param string $url 默认指向 GitHub 仓库。
+	 */
+	return (string) apply_filters( 'aurora_star_theme_url', 'https://github.com/chinachat/aurora-star' );
+}
+
+/**
+ * 页脚版权文案（不含备案信息，备案单独成行）。
  *
  * @return string
  */
 function aurora_star_footer_copyright() {
 	$text = get_theme_mod( 'aurora_star_footer_text', '' );
+
 	if ( empty( $text ) ) {
 		$text = sprintf(
-			/* translators: %s: 年份。 */
-			__( '© %s %s', 'aurora-star' ),
+			/* translators: 1: 年份，2: 站点名称。 */
+			__( '© %1$s %2$s', 'aurora-star' ),
 			date_i18n( 'Y' ),
 			get_bloginfo( 'name' )
 		);
 	}
 
-	// 备案信息。
+	return $text;
+}
+
+/**
+ * 备案信息（ICP + 公安备案），为空时返回空字符串。
+ *
+ * @return string
+ */
+function aurora_star_footer_filings_html() {
 	$links = array();
 
 	$icp = get_theme_mod( 'aurora_star_icp', '' );
 	if ( $icp ) {
 		$icp_url = get_theme_mod( 'aurora_star_icp_link', 'https://beian.miit.gov.cn/' );
-		$links[] = '<a href="' . esc_url( $icp_url ) . '" target="_blank" rel="nofollow">' . esc_html( $icp ) . '</a>';
+		$links[] = '<a href="' . esc_url( $icp_url ) . '" target="_blank" rel="noopener noreferrer nofollow">' . esc_html( $icp ) . '</a>';
 	}
 
 	$police = get_theme_mod( 'aurora_star_police', '' );
@@ -617,18 +640,35 @@ function aurora_star_footer_copyright() {
 		$police_url = get_theme_mod( 'aurora_star_police_link', '' );
 		$badge_url  = get_template_directory_uri() . '/assets/img/police-logo.png';
 		$badge_html = '<img class="aurora-police-logo" src="' . esc_url( $badge_url ) . '" alt="' . esc_attr__( '公安备案', 'aurora-star' ) . '" /> ';
+
 		if ( $police_url ) {
-			$links[] = '<a class="aurora-police" href="' . esc_url( $police_url ) . '" target="_blank" rel="nofollow">' . $badge_html . esc_html( $police ) . '</a>';
+			$links[] = '<a class="aurora-police" href="' . esc_url( $police_url ) . '" target="_blank" rel="noopener noreferrer nofollow">' . $badge_html . esc_html( $police ) . '</a>';
 		} else {
 			$links[] = '<span class="aurora-police">' . $badge_html . esc_html( $police ) . '</span>';
 		}
 	}
 
-	if ( ! empty( $links ) ) {
-		$text .= ' <span class="site-footer__sep">·</span> ' . implode( ' <span class="site-footer__sep">·</span> ', $links );
+	if ( ! $links ) {
+		return '';
 	}
 
-	return $text;
+	return implode( ' <span class="site-footer__sep" aria-hidden="true">·</span> ', $links );
+}
+
+/**
+ * 主题署名（主题名带 GitHub 仓库链接，新标签页打开）。
+ *
+ * @return string
+ */
+function aurora_star_footer_credits_html() {
+	$link = '<a href="' . esc_url( aurora_star_theme_url() ) . '" target="_blank" rel="noopener noreferrer">'
+		. esc_html__( 'Aurora Star 极光主题', 'aurora-star' ) . '</a>';
+
+	return sprintf(
+		/* translators: %s: 主题名称链接。 */
+		esc_html__( '由 %s 驱动', 'aurora-star' ),
+		$link
+	);
 }
 
 /**

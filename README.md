@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.4.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.0-6366f1?style=flat-square)
 
 </div>
 
@@ -25,7 +25,8 @@
 | 🧭 **全局浮动导航** | 右下角返回顶部 + 分享（微博 / QQ / 复制链接） |
 | 🔧 **短码系统** | `[button]` `[alert]` `[tabs]` `[accordion]` `[code]` `[youtube]` `[icon]` 等 |
 | 🌌 **极光背景** | 浅色/暗色主题各自适配的极光背景图，一键开关 |
-| 🏷️ **备案信息** | ICP 备案 + 公安备案，留空自动隐藏 |
+| 🏷️ **备案信息** | ICP + 公安备案（带本地化徽章），**单独成行**，留空自动隐藏 |
+| 🔗 **友情链接** | 独立的「友情链接」菜单位置，页脚自动渲染；未分配时不输出 |
 | 💬 **评论增强** | Gravatar 头像（可设默认图案）；昵称后显示国旗 + IP 归属地、操作系统与浏览器版本 |
 | 🌐 **多厂商 IP 库** | 兼容 MaxMind DB 格式的任意 IP 库（DB-IP / GeoLite2 / IPinfo）；后台一键上传，自动署名 |
 | 📤 **IP 库后台上传** | 后台直接上传/更新 IP 库，识别 `.tar.gz` / `.gz` / `.zip` / `.mmdb`，显示构建时间 |
@@ -149,9 +150,11 @@ add_filter( 'aurora_star_geoip_db_path', function () {
 | `aurora_star_allow_svg_upload` | 默认 `false`。SVG 可携带脚本，开放前请确认上传权限仅限可信用户 |
 | `aurora_star_should_track_view` | 返回 `false` 可完全关闭当前请求的阅读数统计 |
 | `aurora_star_count_logged_in_views` | 默认 `false`（登录用户不计数），设为 `true` 可统计登录用户 |
-| `aurora_star_geoip_db_path` | GeoLite2 数据库路径 |
+| `aurora_star_geoip_db_path` | GeoLite2 / DB-IP 等数据库路径 |
 | `aurora_star_comment_avatar_html` | 覆盖评论头像 HTML（如接入 CDN 头像） |
 | `aurora_star_persist_comment_geo` | 返回 `false` 可关闭归属地写库（改为每次渲染实时查询） |
+| `aurora_star_theme_url` | 页脚主题署名的链接地址，默认指向 GitHub 仓库 |
+| `aurora_star_footer_links_new_tab` | 返回 `false` 可让页脚菜单链接在本页打开 |
 | `aurora_star_content_width` | 内容宽度，默认 800 |
 
 ### 阅读数说明
@@ -199,6 +202,17 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.5.0** — 页脚重构与友情链接
+
+- **新增** 「友情链接」菜单位置，页脚自动渲染；未分配菜单时不输出任何内容
+- **变更** 页脚改为**多行布局**：版权 / 备案 / 署名各自成行，不再全挤在一行用「·」分隔
+- **变更** 备案与公安备案**单独占一行**（两者仍同行，用「·」分隔）
+- **新增** 页脚主题名指向 [GitHub 仓库](https://github.com/chinachat/aurora-star)，
+  可用 `aurora_star_theme_url` 过滤器改成自己的地址
+- **变更** 页脚导航与友情链接的菜单链接**一律新标签页打开**（主导航不受影响），
+  可用 `aurora_star_footer_links_new_tab` 过滤器关闭
+- **修复** 备案链接的 `rel` 补上 `noopener`，避免新标签页拿到 `window.opener`
 
 **v1.4.0** — 兼容多厂商 IP 库
 
