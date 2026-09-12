@@ -313,6 +313,76 @@ function aurora_star_customize_register( $wp_customize ) {
 		)
 	);
 
+	// ========== 评论 ==========
+	$wp_customize->add_section(
+		'aurora_star_comments',
+		array(
+			'title' => __( '评论', 'aurora-star' ),
+			'panel' => 'aurora_star_panel',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_avatar_default',
+		array(
+			'default'           => 'mystery',
+			'sanitize_callback' => 'aurora_star_sanitize_avatar_default',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_avatar_default',
+		array(
+			'label'       => __( 'Gravatar 默认头像', 'aurora-star' ),
+			'description' => __( '评论者没有 Gravatar 账号时显示的图案。', 'aurora-star' ),
+			'section'     => 'aurora_star_comments',
+			'type'        => 'select',
+			'choices'     => array(
+				'mystery'   => __( '神秘人（Gravatar 默认）', 'aurora-star' ),
+				'mm'        => __( '卡通人物', 'aurora-star' ),
+				'identicon' => __( '几何图形', 'aurora-star' ),
+				'monsterid' => __( '小怪兽', 'aurora-star' ),
+				'wavatar'   => __( '脸谱', 'aurora-star' ),
+				'retro'     => __( '8 位像素', 'aurora-star' ),
+				'robohash'  => __( '机器人', 'aurora-star' ),
+				'blank'     => __( '空白', 'aurora-star' ),
+			),
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_comment_geo',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_comment_geo',
+		array(
+			'label'       => __( '显示 IP 归属地', 'aurora-star' ),
+			'description' => __( '在评论者昵称后显示国旗与所在地区。需自行放置 MaxMind GeoLite2 数据库，详见主题 assets/geoip/README.md；未放置时该项不生效。', 'aurora-star' ),
+			'section'     => 'aurora_star_comments',
+			'type'        => 'checkbox',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_comment_ua',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_comment_ua',
+		array(
+			'label'       => __( '显示操作系统与浏览器', 'aurora-star' ),
+			'description' => __( '从评论自带的 User-Agent 本地解析，不产生任何外部请求。', 'aurora-star' ),
+			'section'     => 'aurora_star_comments',
+			'type'        => 'checkbox',
+		)
+	);
+
 	// ========== 文章 ==========
 	$wp_customize->add_section(
 		'aurora_star_post',
@@ -486,6 +556,18 @@ function aurora_star_sanitize_dark_default( $input ) {
  */
 function aurora_star_sanitize_highlight_theme( $input ) {
 	return in_array( $input, array( 'okaidia' ), true ) ? $input : 'okaidia';
+}
+
+/**
+ * 校验 Gravatar 默认头像。
+ *
+ * @param string $input 输入值。
+ * @return string
+ */
+function aurora_star_sanitize_avatar_default( $input ) {
+	$allowed = array( 'mystery', 'mm', 'identicon', 'monsterid', 'wavatar', 'retro', 'robohash', 'blank' );
+
+	return in_array( $input, $allowed, true ) ? $input : 'mystery';
 }
 
 /**

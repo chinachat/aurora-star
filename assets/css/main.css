@@ -1044,16 +1044,101 @@ html[data-theme="dark"] .header-search {
 
 .comment-body {
 	display: flex;
-	gap: 16px;
+	align-items: flex-start;
+	gap: 14px;
 }
 
-.comment-author .avatar {
+.comment-avatar {
+	flex: 0 0 auto;
+	line-height: 0;
+}
+
+.comment-avatar .avatar,
+.aurora-comment-avatar-img {
+	display: block;
+	width: 48px;
+	height: 48px;
 	border-radius: 50%;
+	background: var(--aurora-star-surface-2);
+}
+
+.comment-main {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.comment-author {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	font-size: 0.95em;
+	color: var(--aurora-star-text);
+}
+
+.comment-author .fn {
+	font-style: normal;
+	font-weight: 600;
+}
+
+.comment-author .fn a {
+	color: var(--aurora-star-text);
+}
+
+.comment-author .fn a:hover {
+	color: var(--aurora-star-primary);
+}
+
+/* 评论元信息徽章：IP 归属地 / 操作系统 / 浏览器 */
+.aurora-comment-badges {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.aurora-comment-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	max-width: 100%;
+	padding: 1px 8px;
+	border: 1px solid var(--aurora-star-border);
+	border-radius: 999px;
+	background: var(--aurora-star-surface-2);
+	color: var(--aurora-star-text-3);
+	font-size: 0.75em;
+	line-height: 1.7;
+	white-space: nowrap;
+}
+
+.aurora-comment-badge > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.aurora-comment-badge i {
+	font-size: 0.95em;
+	flex: 0 0 auto;
+}
+
+.aurora-comment-flag {
+	flex: 0 0 auto;
+	width: 16px;
+	height: 12px;
+	border-radius: 2px;
+	object-fit: cover;
+	box-shadow: 0 0 0 1px var(--aurora-star-border);
 }
 
 .comment-meta {
-	font-size: 0.85em;
+	margin-top: 4px;
+	font-size: 0.82em;
 	color: var(--aurora-star-text-3);
+}
+
+.comment-metadata a {
+	color: inherit;
 }
 
 .comment-content {
@@ -1062,6 +1147,23 @@ html[data-theme="dark"] .header-search {
 
 .comment-reply-link {
 	font-size: 0.82em;
+}
+
+@media (max-width: 480px) {
+	.comment-body {
+		gap: 10px;
+	}
+
+	.comment-avatar .avatar,
+	.aurora-comment-avatar-img {
+		width: 36px;
+		height: 36px;
+	}
+
+	.aurora-comment-badge {
+		font-size: 0.72em;
+		padding: 0 6px;
+	}
 }
 
 .comment-form input[type="text"],

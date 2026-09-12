@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.1.5-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.2.0-6366f1?style=flat-square)
 
 </div>
 
@@ -26,6 +26,7 @@
 | 🔧 **短码系统** | `[button]` `[alert]` `[tabs]` `[accordion]` `[code]` `[youtube]` `[icon]` 等 |
 | 🌌 **极光背景** | 浅色/暗色主题各自适配的极光背景图，一键开关 |
 | 🏷️ **备案信息** | ICP 备案 + 公安备案，留空自动隐藏 |
+| 💬 **评论增强** | Gravatar 头像（可设默认图案）；昵称后显示国旗 + IP 归属地、操作系统与浏览器版本 |
 | 🇨🇳 **简体中文** | 内置 zh_CN 语言包，前后台界面全面中文化 |
 | 🖼️ **特色图** | 文章页大图 + 列表缩略图，可单独关闭文章内显示 |
 
@@ -82,6 +83,46 @@ fa-solid fa-folder    归档
 fa-brands fa-github   GitHub
 ```
 
+## 💬 评论增强
+
+评论区会显示 Gravatar 头像，并在昵称后附带徽章：
+
+```
+[头像] 张三  [🇨🇳 中国 · 广东 · 深圳]  [🪟 Windows 10/11]  [🌐 Chrome 120.0.0.0]
+       2026-09-12 12:00
+```
+
+| 项目 | 数据来源 | 是否需要额外配置 |
+|---|---|---|
+| 头像 | Gravatar（`get_avatar()`），可在自定义器里选择默认图案 | 否 |
+| 操作系统 / 浏览器 | 评论自带 `comment_agent`，**纯本地正则解析** | 否 |
+| 国旗 + IP 归属地 | 本地 MaxMind GeoLite2 数据库 | **需要自行放置 mmdb** |
+
+### 开启 IP 归属地
+
+主题**不附带** GeoLite2 数据库（几十 MB 且有独立许可），需要你自行下载：
+
+1. 到 <https://www.maxmind.com/en/geolite2/signup> 注册免费账号并下载 `GeoLite2-City.mmdb`
+2. 放到 `wp-content/themes/aurora-star/assets/geoip/GeoLite2-City.mmdb`，
+   或放到主题目录之外再用过滤器指定（推荐）：
+
+```php
+add_filter( 'aurora_star_geoip_db_path', function () {
+    return WP_CONTENT_DIR . '/uploads/geoip/GeoLite2-City.mmdb';
+} );
+```
+
+详见 [`assets/geoip/README.md`](assets/geoip/README.md)。
+
+> 未放置数据库时该功能静默关闭，评论区不会报错。
+> 归属地查询**全部在本地完成**，不会把访客 IP 发送给任何第三方。
+> GeoLite2 数据库受 MaxMind 许可协议约束（CC BY-SA 4.0），要求保留署名。
+
+### 性能
+
+归属地查询单次约 1 ms。为避免拖慢页面，解析结果会写入评论 meta（`_aurora_star_geo`），
+**每条评论只查一次**；新评论在提交时即完成解析，已有评论会在首次被浏览时补上并缓存。
+
 ## 🔌 开发者钩子
 
 | 过滤器 | 说明 |
@@ -91,6 +132,9 @@ fa-brands fa-github   GitHub
 | `aurora_star_allow_svg_upload` | 默认 `false`。SVG 可携带脚本，开放前请确认上传权限仅限可信用户 |
 | `aurora_star_should_track_view` | 返回 `false` 可完全关闭当前请求的阅读数统计 |
 | `aurora_star_count_logged_in_views` | 默认 `false`（登录用户不计数），设为 `true` 可统计登录用户 |
+| `aurora_star_geoip_db_path` | GeoLite2 数据库路径 |
+| `aurora_star_comment_avatar_html` | 覆盖评论头像 HTML（如接入 CDN 头像） |
+| `aurora_star_persist_comment_geo` | 返回 `false` 可关闭归属地写库（改为每次渲染实时查询） |
 | `aurora_star_content_width` | 内容宽度，默认 800 |
 
 ### 阅读数说明
@@ -121,17 +165,34 @@ aurora-star/
 │   ├── shortcodes.php     # 短码系统
 │   ├── toc.php            # 服务端目录生成
 │   ├── menu-walker.php    # 菜单图标
+│   ├── comments.php       # 评论增强（头像 / 归属地 / UA）
 │   └── admin-menu.php     # 后台一级菜单
 ├── assets/
 │   ├── css/               # 主题样式（含暗色、灯箱、目录等）
 │   ├── js/                # 主题脚本
-│   ├── img/               # 极光背景图
+│   ├── img/               # 极光背景图、默认头像
+│   ├── geoip/             # GeoLite2 数据库放置目录（见其中 README）
 │   ├── icons/             # Font Awesome 7（自托管）
-│   └── vendor/prism/      # Prism.js（自托管）
+│   └── vendor/
+│       ├── prism/             # Prism.js（自托管）
+│       ├── maxmind-db-reader/ # MaxMind DB 读取库（Apache-2.0）
+│       └── flag-icons/        # 国旗 SVG（MIT）
 └── languages/             # 简体中文语言包
 ```
 
 ## 📦 发行说明
+
+**v1.2.0** — 评论增强
+
+- **新增** 评论区昵称后显示徽章：国旗 + IP 归属地、操作系统、浏览器版本
+- **新增** Gravatar 头像默认图案可选（神秘人 / 几何图形 / 像素风等）
+- **新增** 自定义器「评论」设置区，可分别开关归属地与系统/浏览器显示
+- **新增** 自托管 SVG 旗帜资源（271 面，符合主题「零外部 CDN」原则）
+- **新增** 内置 MaxMind DB Reader（Apache-2.0），归属地查询全本地完成，不外发 IP
+- **性能** 归属地按评论缓存到 meta，每条评论只查一次；新评论在提交时解析
+- **修复** 评论布局：原先 `.comment-body` 为 flex 导致头像/正文/回复挤成三列，
+  已改为「头像 + 主内容」两列结构
+- **无障碍** 元信息徽章整组标注，图片装饰性 `alt` 留空避免读屏重复
 
 **v1.1.5** — 代码审查修复
 
@@ -180,6 +241,13 @@ aurora-star/
 
 - 图标：[Font Awesome Free](https://fontawesome.com)（CC BY 4.0 / SIL OFL 1.1 / MIT）
 - 代码高亮：[Prism.js](https://prismjs.com)（MIT）
+- 国旗：[flag-icons](https://github.com/lipis/flag-icons)（MIT）
+- MaxMind DB 读取：[maxmind-db/reader](https://github.com/maxmind/MaxMind-DB-Reader-php)（Apache-2.0）
+- GeoLite2 数据库：由使用者自行获取，受 [MaxMind 最终用户许可协议](https://www.maxmind.com/en/geolite2/eula) 约束
+
+> Apache-2.0 与 GPLv3 兼容、但与 GPLv2 不兼容。本主题声明为 “GPL v2 **or later**”，
+> 因此整体可按 GPLv3 分发。若你需要严格的 GPLv2-only 分发，请替换掉
+> `assets/vendor/maxmind-db-reader/`（该库仅在开启 IP 归属地时才会被载入）。
 
 ---
 
