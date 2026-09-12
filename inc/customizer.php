@@ -400,6 +400,102 @@ function aurora_star_customize_register( $wp_customize ) {
 		)
 	);
 
+	// ========== 列表布局 ==========
+	$wp_customize->add_section(
+		'aurora_star_layout',
+		array(
+			'title'       => __( '列表布局', 'aurora-star' ),
+			'description' => __( '首页、归档、搜索页的文章列表样式。三种布局共用同一套模板，只换观感。', 'aurora-star' ),
+			'panel'       => 'aurora_star_panel',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_list_layout',
+		array(
+			'default'           => 'card',
+			'sanitize_callback' => 'aurora_star_sanitize_layout',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_list_layout',
+		array(
+			'label'   => __( '布局样式', 'aurora-star' ),
+			'section' => 'aurora_star_layout',
+			'type'    => 'select',
+			'choices' => aurora_star_layout_choices(),
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_list_columns',
+		array(
+			'default'           => 'auto',
+			'sanitize_callback' => 'aurora_star_sanitize_columns',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_list_columns',
+		array(
+			'label'       => __( '每行列数（桌面端）', 'aurora-star' ),
+			'section'     => 'aurora_star_layout',
+			'type'        => 'select',
+			'choices'     => aurora_star_column_choices(),
+			'description' => __( '手机始终 1 栏、平板 2 栏；列表布局固定单栏，此项不生效。', 'aurora-star' ),
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_list_excerpt',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_list_excerpt',
+		array(
+			'label'       => __( '显示摘要', 'aurora-star' ),
+			'section'     => 'aurora_star_layout',
+			'type'        => 'checkbox',
+			'description' => __( '紧凑网格始终不显示摘要。', 'aurora-star' ),
+		)
+	);
+
+	$layout_scopes = array(
+		'aurora_star_layout_on_home'    => array(
+			'label'       => __( '首页 / 博客列表', 'aurora-star' ),
+			'description' => __( '取消勾选后，该页回到主题内置的响应式卡片网格。', 'aurora-star' ),
+		),
+		'aurora_star_layout_on_archive' => array(
+			'label'       => __( '归档（分类 / 标签 / 日期 / 作者）', 'aurora-star' ),
+			'description' => '',
+		),
+		'aurora_star_layout_on_search'  => array(
+			'label'       => __( '搜索结果', 'aurora-star' ),
+			'description' => '',
+		),
+	);
+
+	foreach ( $layout_scopes as $setting => $args ) {
+		$wp_customize->add_setting(
+			$setting,
+			array(
+				'default'           => true,
+				'sanitize_callback' => 'wp_validate_boolean',
+			)
+		);
+		$wp_customize->add_control(
+			$setting,
+			array(
+				'label'       => $args['label'],
+				'section'     => 'aurora_star_layout',
+				'type'        => 'checkbox',
+				'description' => $args['description'],
+			)
+		);
+	}
+
 	// ========== 文章 ==========
 	$wp_customize->add_section(
 		'aurora_star_post',
@@ -576,6 +672,26 @@ function aurora_star_sanitize_highlight_theme( $input ) {
 }
 
 /**
+ * 校验列表布局。
+ *
+ * @param string $input 输入值。
+ * @return string
+ */
+function aurora_star_sanitize_layout( $input ) {
+	return array_key_exists( $input, aurora_star_layout_choices() ) ? $input : 'card';
+}
+
+/**
+ * 校验列表列数。
+ *
+ * @param string $input 输入值。
+ * @return string
+ */
+function aurora_star_sanitize_columns( $input ) {
+	return array_key_exists( (string) $input, aurora_star_column_choices() ) ? (string) $input : 'auto';
+}
+
+/**
  * 校验 Gravatar 默认头像。
  *
  * @param string $input 输入值。
@@ -733,6 +849,9 @@ function aurora_star_dynamic_css() {
 		$css   .= 'body{background-image:url("' . $bg_url . '");background-size:cover;background-attachment:fixed;background-position:center;background-repeat:no-repeat;}';
 		$css   .= 'html[data-theme="dark"] body{background-image:url("' . get_template_directory_uri() . '/assets/img/bg-aurora-dark.svg");}';
 	}
+
+	// 列表布局：只在需要覆盖主题内置的自适应网格时才有内容。
+	$css .= aurora_star_layout_css();
 
 	printf(
 		'<style id="aurora-star-inline-css">%1$s</style>',

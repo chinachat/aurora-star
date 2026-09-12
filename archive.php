@@ -22,7 +22,7 @@ get_header();
 
 	<?php if ( have_posts() ) : ?>
 
-		<div class="post-grid">
+		<div class="<?php echo esc_attr( aurora_star_post_grid_class() ); ?>">
 			<?php
 			while ( have_posts() ) :
 				the_post();

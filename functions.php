@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AURORA_STAR_VERSION', '2.0.2' );
+define( 'AURORA_STAR_VERSION', '2.1.0' );
 define( 'AURORA_STAR_DIR', get_template_directory() );
 define( 'AURORA_STAR_URI', get_template_directory_uri() );
 
@@ -21,6 +21,7 @@ define( 'AURORA_STAR_VIEW_COOKIE_MAX', 50 );
 
 require_once AURORA_STAR_DIR . '/inc/setup.php';
 require_once AURORA_STAR_DIR . '/inc/enqueue.php';
+require_once AURORA_STAR_DIR . '/inc/layout.php';
 require_once AURORA_STAR_DIR . '/inc/customizer.php';
 require_once AURORA_STAR_DIR . '/inc/shortcodes.php';
 require_once AURORA_STAR_DIR . '/inc/toc.php';

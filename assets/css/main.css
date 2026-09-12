@@ -730,6 +730,92 @@ a.site-footer__geo-source {
 	}
 }
 
+/* ---------- 列表布局（缩略图在左的通栏行） ---------- */
+
+/* 双类名提特异性，压过上面两条媒体查询里的 .post-grid */
+.post-grid.post-grid--list {
+	grid-template-columns: 1fr;
+	gap: 18px;
+}
+
+.post-grid--list .post-card__link {
+	display: grid;
+	grid-template-columns: 260px 1fr;
+	align-items: stretch;
+}
+
+.post-grid--list .post-card__media {
+	aspect-ratio: auto;
+	height: 100%;
+	min-height: 150px;
+}
+
+.post-grid--list .post-card__body {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 20px 24px;
+}
+
+.post-grid--list .post-card__excerpt {
+	-webkit-line-clamp: 2;
+}
+
+@media (max-width: 639px) {
+	.post-grid--list .post-card__link {
+		grid-template-columns: 1fr;
+	}
+
+	.post-grid--list .post-card__media {
+		aspect-ratio: 16 / 9;
+		height: auto;
+		min-height: 0;
+	}
+
+	.post-grid--list .post-card__body {
+		padding: 16px 18px 18px;
+	}
+}
+
+/* ---------- 紧凑网格（小卡、不显示摘要） ---------- */
+
+.post-grid--compact {
+	gap: 16px;
+}
+
+.post-grid--compact .post-card__media {
+	aspect-ratio: 4 / 3;
+}
+
+.post-grid--compact .post-card__body {
+	padding: 12px 14px 14px;
+}
+
+.post-grid--compact .post-card__cats {
+	margin-bottom: 6px;
+}
+
+.post-grid--compact .post-card__title {
+	font-size: 1em;
+	margin-bottom: 6px;
+}
+
+.post-grid--compact .post-card__meta {
+	font-size: 0.76em;
+	gap: 10px;
+}
+
+/* 紧凑网格始终不显示摘要；「显示摘要」开关对卡片与列表生效 */
+.post-grid--compact .post-card__excerpt {
+	display: none;
+}
+
+/* ---------- 关闭摘要 ---------- */
+
+.post-grid--no-excerpt .post-card__excerpt {
+	display: none;
+}
+
 .post-card {
 	background: var(--aurora-star-surface);
 	border: 1px solid var(--aurora-star-border);

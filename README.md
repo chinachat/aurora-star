@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-2.0.2-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.1.0-6366f1?style=flat-square)
 
 </div>
 
@@ -33,6 +33,7 @@
 | 📤 **IP 库后台上传** | 后台直接上传/更新 IP 库，识别 `.tar.gz` / `.gz` / `.zip` / `.mmdb`，显示构建时间 |
 | 🇨🇳 **简体中文** | 内置 zh_CN 语言包，前后台界面全面中文化 |
 | 🖼️ **特色图** | 文章页大图 + 列表缩略图，可单独关闭文章内显示 |
+| 🧱 **列表布局可切** | 卡片 / 列表 / 紧凑网格三种，桌面列数 2–4 可调，首页 / 归档 / 搜索可分别开关 |
 
 ## 🚀 快速开始
 
@@ -183,6 +184,7 @@ aurora-star/
 │   ├── setup.php          # 主题初始化
 │   ├── enqueue.php        # 资源加载
 │   ├── customizer.php     # 设置选项
+│   ├── layout.php         # 列表布局（卡片 / 列表 / 紧凑网格）
 │   ├── shortcodes.php     # 短码系统
 │   ├── toc.php            # 服务端目录生成
 │   ├── menu-walker.php    # 菜单图标
@@ -205,6 +207,23 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.1.0** — 列表布局可切换：卡片 / 列表 / 紧凑网格
+
+- **新增** 自定义器 → **列表布局**：三种布局共用同一份模板标记，只换容器修饰类
+  - **卡片**（默认）：现有的响应式网格
+  - **列表**：缩略图在左的通栏行，摘要压到 2 行；窄屏自动回退成上图下文
+  - **紧凑网格**：小卡、无摘要，适合信息密集的归档页
+- **新增** 桌面端列数可调：自适应（手机 1 / 平板 2 / 桌面 3）或固定 2 / 3 / 4 栏。
+  手机始终 1 栏、平板 2 栏；列表布局固定单栏，该选项自动忽略
+- **新增** 「显示摘要」开关（卡片与列表生效；紧凑网格固定不显示）
+- **新增** 作用范围可分别开关：首页 / 博客列表、归档（分类/标签/日期/作者）、搜索结果。
+  关掉某一项，该页回到主题内置的响应式卡片网格
+- **实现** 模板里不再写死 `class="post-grid"`，改调 `aurora_star_post_grid_class()`；
+  列数覆盖走 `wp_head` 优先级 20 的动态 CSS（排在所有样式表之后）；
+  新增 `inc/layout.php` 承载全部布局逻辑
+- **验证** 新增 `test-layout.php`（55 项）：选项集合、范围开关、容器 class、
+  非法值回退、动态 CSS 产物、模板接线、CSS 与模板是否对得上
 
 **v2.0.2** — 修复 Markdown 代码块与主题代码高亮打架（配色错乱）
 
