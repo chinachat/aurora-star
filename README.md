@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.3.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.4.0-6366f1?style=flat-square)
 
 </div>
 
@@ -27,7 +27,8 @@
 | 🌌 **极光背景** | 浅色/暗色主题各自适配的极光背景图，一键开关 |
 | 🏷️ **备案信息** | ICP 备案 + 公安备案，留空自动隐藏 |
 | 💬 **评论增强** | Gravatar 头像（可设默认图案）；昵称后显示国旗 + IP 归属地、操作系统与浏览器版本 |
-| 📤 **IP 库后台上传** | 后台直接上传/更新 GeoLite2，自动识别 `.tar.gz` / `.gz` / `.zip` / `.mmdb`，显示构建时间 |
+| 🌐 **多厂商 IP 库** | 兼容 MaxMind DB 格式的任意 IP 库（DB-IP / GeoLite2 / IPinfo）；后台一键上传，自动署名 |
+| 📤 **IP 库后台上传** | 后台直接上传/更新 IP 库，识别 `.tar.gz` / `.gz` / `.zip` / `.mmdb`，显示构建时间 |
 | 🇨🇳 **简体中文** | 内置 zh_CN 语言包，前后台界面全面中文化 |
 | 🖼️ **特色图** | 文章页大图 + 列表缩略图，可单独关闭文章内显示 |
 
@@ -101,35 +102,38 @@ fa-brands fa-github   GitHub
 
 ### 开启 IP 归属地
 
-主题**不附带** GeoLite2 数据库（几十 MB 且有独立许可）。有两种方式：
+主题**不附带**数据库，也不绑定厂商——兼容**所有 MaxMind DB（mmdb）格式**的库。
+
+> ⚠️ **MaxMind GeoLite2 现对部分地区不再开放注册**。拿不到账号的话，直接用
+> **DB-IP Lite**（免注册、直接下载、每月更新）即可。
 
 **方式一：后台直接上传（推荐）**
 
-1. 到 <https://www.maxmind.com/en/geolite2/signup> 注册免费账号，下载 `GeoLite2-City.tar.gz`
+1. 从 <https://db-ip.com/db/lite.php> 直接下载（无需注册）：
+   - 城市级：`dbip-city-lite-YYYY-MM.mmdb.gz`（gz ≈ 60 MB）
+   - 国家级：`dbip-country-lite-YYYY-MM.mmdb.gz`（**gz 仅 4 MB，几乎不受上传限制**）
 2. 进入 **后台 → Aurora Star 主题 → IP 归属地数据库**，选择文件后点「上传并安装」
-3. 面板会显示数据库类型、**构建时间**、节点数与文件大小，便于确认是否已更新
+3. 面板会显示数据库类型、**构建时间**、大小、节点数，便于确认是否已更新
 
-支持 MaxMind 官方下载的 `.tar.gz`，也支持 `.gz` / `.zip` / 直接上传 `.mmdb`。
-上传后会**先校验文件有效性再替换**，校验失败会保留原有数据库，不会把功能弄坏。
+支持官方下载的 `.tar.gz`，也支持 `.gz` / `.zip` / 直接上传 `.mmdb`。
+上传后**先校验再替换**，校验失败会保留原有数据库，不会把功能弄坏。
 
 **方式二：手动放置**
 
-放到 `wp-content/themes/aurora-star/assets/geoip/GeoLite2-City.mmdb`，
-或用过滤器指到主题目录之外：
-
 ```php
 add_filter( 'aurora_star_geoip_db_path', function () {
-    return WP_CONTENT_DIR . '/uploads/geoip/GeoLite2-City.mmdb';
+    return WP_CONTENT_DIR . '/uploads/geoip/ip-database.mmdb';
 } );
 ```
 
-**查找优先级**：过滤器 > 后台上传（`uploads/aurora-star-geoip/`，城市库优先于国家库）> 主题目录。
+**查找优先级**：过滤器 > 后台上传（`uploads/aurora-star-geoip/ip-database.mmdb`）> 主题目录。
 
 详见 [`assets/geoip/README.md`](assets/geoip/README.md)。
 
 > 未放置数据库时该功能静默关闭，评论区不会报错。
 > 归属地查询**全部在本地完成**，不会把访客 IP 发送给任何第三方。
-> GeoLite2 数据库受 MaxMind 许可协议约束（CC BY-SA 4.0），要求保留署名。
+> **署名要求**：DB-IP Lite（CC BY 4.0）与 GeoLite2（CC BY-SA 4.0）都要求在展示其数据的
+> 页面保留署名。主题会自动在页脚输出对应来源的署名链接，可在自定义器里关闭。
 
 ### 性能
 
@@ -195,6 +199,20 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.4.0** — 兼容多厂商 IP 库
+
+- **新增** 兼容 MaxMind DB（mmdb）格式的**任意** IP 库：DB-IP Lite、GeoLite2、IPinfo 等，
+  按文件内容识别，不再绑定 MaxMind
+- **新增** 多 schema 兜底解析：同时支持 `country.iso_code`（MaxMind / DB-IP）与
+  `country` / `country_code` / `country_name` / `region_name` / `city_name` 等扁平字段（IPinfo 系）
+- **新增** 页脚自动输出 IP 数据来源署名，并按数据库类型匹配对应品牌
+  （DB-IP Lite 的 CC BY 4.0 明确要求在展示数据的页面回链 db-ip.com），可关闭
+- **变更** 上传槽位统一为 `ip-database.mmdb`，上传新库即替换旧库，
+  不再按厂商命名（原先 DB-IP 会被存成 `GeoLite2-City.mmdb`，造成误解）；
+  v1.3.0 的旧文件名仍被识别，升级无感
+- **文档** 说明 GeoLite2 注册已对部分地区关闭，主推免注册的 DB-IP Lite
+  （城市库 gz 约 60 MB，国家库 gz 仅 4 MB）
 
 **v1.3.0** — IP 数据库后台上传
 
@@ -269,7 +287,8 @@ aurora-star/
 - 代码高亮：[Prism.js](https://prismjs.com)（MIT）
 - 国旗：[flag-icons](https://github.com/lipis/flag-icons)（MIT）
 - MaxMind DB 读取：[maxmind-db/reader](https://github.com/maxmind/MaxMind-DB-Reader-php)（Apache-2.0）
-- GeoLite2 数据库：由使用者自行获取，受 [MaxMind 最终用户许可协议](https://www.maxmind.com/en/geolite2/eula) 约束
+- IP 数据库：由使用者自行获取。**GeoLite2 受 MaxMind EULA / CC BY-SA 4.0 约束，
+  DB-IP Lite 受 CC BY 4.0 约束，两者都要求署名**——主题会在页脚自动输出对应署名链接
 
 > Apache-2.0 与 GPLv3 兼容、但与 GPLv2 不兼容。本主题声明为 “GPL v2 **or later**”，
 > 因此整体可按 GPLv3 分发。若你需要严格的 GPLv2-only 分发，请替换掉

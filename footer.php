@@ -31,6 +31,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<?php echo wp_kses_post( aurora_star_footer_copyright() ); ?>
 			<span class="site-footer__sep">·</span>
 			<span class="site-footer__theme"><?php esc_html_e( '由 Aurora Star 极光主题驱动', 'aurora-star' ); ?></span>
+			<?php
+			$aurora_geo_credit = aurora_star_geoip_attribution_html();
+			if ( '' !== $aurora_geo_credit ) :
+				?>
+				<span class="site-footer__sep">·</span>
+				<?php echo $aurora_geo_credit; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- 内部已转义。 ?>
+			<?php endif; ?>
 		</div>
 	</div>
 </footer>

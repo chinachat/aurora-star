@@ -192,16 +192,10 @@ function aurora_star_geoip_install_from_path( $source ) {
 		return 'err_' . $inspect['error'];
 	}
 
-	// 按数据库类型命名：城市库 / 国家库分别落盘，城市库优先被读取。
-	if ( false !== strpos( $inspect['type'], 'City' ) ) {
-		$target_name = 'GeoLite2-City.mmdb';
-	} elseif ( false !== strpos( $inspect['type'], 'Country' ) ) {
-		$target_name = 'GeoLite2-Country.mmdb';
-	} else {
-		$target_name = 'GeoLite2.mmdb';
-	}
-
-	$target = $upload_dir . '/' . $target_name;
+	// 单一槽位：上传新库即替换旧库，避免「换了库但旧的还在生效」的困惑。
+	// 库的品牌与类型由 metadata 的 database_type 决定，界面上展示的就是它
+	// （GeoLite2-City / DBIP-City-Lite / IPinfo Free 等）。
+	$target = $upload_dir . '/ip-database.mmdb';
 
 	// 同目录内的重命名是原子操作。
 	if ( ! @rename( $working, $target ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
@@ -213,10 +207,21 @@ function aurora_star_geoip_install_from_path( $source ) {
 		@unlink( $working ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 	}
 
+	// 清掉 v1.3.0 按厂商命名的旧文件，避免与新槽位混淆。
+	foreach ( array( 'GeoLite2-City.mmdb', 'GeoLite2-Country.mmdb', 'GeoLite2.mmdb' ) as $legacy ) {
+		$stale = $upload_dir . '/' . $legacy;
+		if ( file_exists( $stale ) ) {
+			@unlink( $stale ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		}
+	}
+
 	// 避免目录被直接浏览。
 	if ( ! file_exists( $upload_dir . '/index.php' ) ) {
 		@file_put_contents( $upload_dir . '/index.php', "<?php\n// Silence is golden.\n" ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 	}
+
+	// 品牌变了，页脚署名要重新判断。
+	delete_option( 'aurora_star_geoip_type' );
 
 	return '';
 }
@@ -448,12 +453,14 @@ function aurora_star_geoip_delete_uploaded() {
 		return;
 	}
 
-	foreach ( array( 'GeoLite2-City.mmdb', 'GeoLite2-Country.mmdb', 'GeoLite2.mmdb', '.incoming.mmdb' ) as $name ) {
+	foreach ( array( 'ip-database.mmdb', 'GeoLite2-City.mmdb', 'GeoLite2-Country.mmdb', 'GeoLite2.mmdb', '.incoming.mmdb' ) as $name ) {
 		$file = $upload_dir . '/' . $name;
 		if ( file_exists( $file ) ) {
 			@unlink( $file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 		}
 	}
+
+	delete_option( 'aurora_star_geoip_type' );
 }
 
 /* -------------------------------------------------------------------------
@@ -475,9 +482,9 @@ function aurora_star_geoip_messages() {
 		'err_uploads_unavailable'  => array( 'error', 'wp-content/uploads 目录不可用或不可写。' ),
 		'err_mkdir'                => array( 'error', '无法创建上传目录，请检查 wp-content/uploads 的写入权限。' ),
 		'err_write'                => array( 'error', '写入数据库文件失败，请检查磁盘空间与目录权限。' ),
-		'err_extract'              => array( 'error', '无法从压缩包中解出 .mmdb，请确认下载完整（GeoLite2 的 .tar.gz 内含 mmdb）。' ),
+		'err_extract'              => array( 'error', '无法从压缩包中解出 .mmdb，请确认文件下载完整（MaxMind / DB-IP 的 .tar.gz 内含 mmdb）。' ),
 		'err_extract_zip'          => array( 'error', '解压 zip 失败。若服务器未启用 zip 扩展，请改用 .tar.gz 或直接上传 .mmdb。' ),
-		'err_not_maxmind_db'       => array( 'error', '这不是有效的 MaxMind 数据库文件（缺少元数据标记），已放弃替换，原数据库未受影响。' ),
+		'err_not_maxmind_db'       => array( 'error', '这不是有效的 IP 数据库文件（缺少 MaxMind DB 格式的元数据标记），已放弃替换，原数据库未受影响。' ),
 		'err_unreadable_db'        => array( 'error', '数据库可以识别但无法读取，可能已损坏，原数据库未受影响。' ),
 		'err_not_readable'         => array( 'error', '文件不可读。' ),
 		'err_reader_missing'       => array( 'error', '主题内置的 MaxMind 读取库未找到，请重新安装主题。' ),
@@ -674,13 +681,16 @@ function aurora_star_render_geoip_panel() {
 			<p>
 				<?php
 				printf(
-					/* translators: %s: 示例过滤器代码。 */
-					esc_html__( '到 %1$s 注册免费账号下载 %2$s，然后用下面的表单上传即可。也可以手动放到主题的 assets/geoip/ 目录，或用 %3$s 过滤器指定其他位置。', 'aurora-star' ),
-					'<a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener noreferrer">maxmind.com</a>',
-					'<code>GeoLite2-City.tar.gz</code>',
+					/* translators: 1: DB-IP 链接，2: 示例文件名，3: 过滤器名。 */
+					esc_html__( '推荐 %1$s：免注册、直接下载 %2$s，上传即可（MaxMind GeoLite2 现对部分地区不再开放注册）。也可用 MaxMind / IPinfo 等任意 MaxMind DB 格式的库，或手动放到主题的 assets/geoip/ 目录，或用 %3$s 过滤器指定其他位置。', 'aurora-star' ),
+					'<a href="https://db-ip.com/db/download/ip-to-city-lite" target="_blank" rel="noopener noreferrer">DB-IP Lite</a>',
+					'<code>dbip-city-lite-YYYY-MM.mmdb.gz</code>',
 					'<code>aurora_star_geoip_db_path</code>'
 				);
 				?>
+			</p>
+			<p class="description">
+				<?php esc_html_e( '兼容 MaxMind GeoLite2、DB-IP Lite、IPinfo 等所有 MaxMind DB 格式数据库，按文件内容识别，不绑定厂商。', 'aurora-star' ); ?>
 			</p>
 		</div>
 	<?php endif; ?>
@@ -695,7 +705,7 @@ function aurora_star_render_geoip_panel() {
 		</p>
 
 		<p class="description" style="max-width: 860px;">
-			<?php esc_html_e( '支持 MaxMind 官方下载的 .tar.gz，也支持 .gz / .zip / 直接上传 .mmdb。上传后会先校验文件有效性，通过后才替换现有数据库；校验失败会保留原库。', 'aurora-star' ); ?>
+			<?php esc_html_e( '支持官方下载的 .tar.gz，也支持 .gz / .zip / 直接上传 .mmdb。上传后会先校验文件有效性，通过后才替换现有数据库；校验失败会保留原库。', 'aurora-star' ); ?>
 		</p>
 	</form>
 

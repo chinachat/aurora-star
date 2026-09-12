@@ -16,20 +16,112 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ---------------------------------------------------------------------- */
 
 /**
- * 自动探测 GeoLite2 数据库路径。
+ * 当前数据库的类型名（带请求外的缓存）。
+ *
+ * 每次读 metadata 都要打开一次数据库文件（GeoLite2 约 3ms），
+ * 而页脚署名只需要知道品牌，因此结果写入 option 复用。
+ *
+ * @return string
+ */
+function aurora_star_geoip_database_type() {
+	static $memo = null;
+
+	if ( null !== $memo ) {
+		return $memo;
+	}
+
+	// 用 false 作为「未缓存」的哨兵：缓存到空字符串表示「当前没有可用数据库」，
+	// 这样无库的站点不会在每次请求都重新探测。
+	$cached = get_option( 'aurora_star_geoip_type', false );
+	if ( false !== $cached ) {
+		return $memo = (string) $cached;
+	}
+
+	$path = aurora_star_geoip_db_path();
+	if ( '' === $path || ! is_readable( $path ) ) {
+		// 没有库时不写 option，避免无谓的写操作。
+		return $memo = '';
+	}
+
+	$inspect = aurora_star_geoip_inspect( $path );
+	$type    = $inspect['ok'] ? $inspect['type'] : '';
+
+	update_option( 'aurora_star_geoip_type', $type );
+
+	return $memo = $type;
+}
+
+/**
+ * IP 数据来源署名。
+ *
+ * MaxMind GeoLite2（CC BY-SA 4.0）与 DB-IP Lite（CC BY 4.0）都要求在使用其数据的
+ * 页面上保留署名，因此默认开启；用不上的站点可以在自定义器里关掉。
+ *
+ * @return string
+ */
+function aurora_star_geoip_attribution_html() {
+	if ( ! get_theme_mod( 'aurora_star_comment_geo', true ) ) {
+		return '';
+	}
+
+	if ( ! get_theme_mod( 'aurora_star_geo_attribution', true ) ) {
+		return '';
+	}
+
+	$type = strtoupper( aurora_star_geoip_database_type() );
+	if ( '' === $type ) {
+		return '';
+	}
+
+	if ( false !== strpos( $type, 'DBIP' ) || false !== strpos( $type, 'DB-IP' ) ) {
+		// DB-IP 许可要求链接回 db-ip.com，并给出了指定文案。
+		$label = 'IP Geolocation by DB-IP';
+		$url   = 'https://db-ip.com';
+	} elseif ( false !== strpos( $type, 'GEOLITE' ) || false !== strpos( $type, 'GEOIP' ) ) {
+		$label = 'IP Geolocation by MaxMind';
+		$url   = 'https://www.maxmind.com';
+	} elseif ( false !== strpos( $type, 'IPINFO' ) ) {
+		$label = 'IP Geolocation by IPinfo';
+		$url   = 'https://ipinfo.io';
+	} else {
+		$label = '';
+		$url   = '';
+	}
+
+	if ( '' === $url ) {
+		$label = sprintf(
+			/* translators: %s: 数据库类型名。 */
+			__( 'IP 数据：%s', 'aurora-star' ),
+			aurora_star_geoip_database_type()
+		);
+
+		return '<span class="site-footer__geo-source">' . esc_html( $label ) . '</span>';
+	}
+
+	return '<a class="site-footer__geo-source" href="' . esc_url( $url ) . '" target="_blank" rel="noopener noreferrer nofollow">'
+		. esc_html( $label ) . '</a>';
+}
+
+/**
+ * 自动探测 IP 数据库路径。
  *
  * 查找顺序：
- *   1. 通过后台「Aurora Star 主题 → IP 数据库」上传的文件（wp-content/uploads/aurora-star-geoip/）
+ *   1. 通过后台「Aurora Star 主题 → IP 归属地数据库」上传的文件（wp-content/uploads/aurora-star-geoip/）
  *   2. 主题目录 assets/geoip/ 下手动放置的文件
+ *
+ * 兼容 MaxMind GeoLite2 / DB-IP Lite / IPinfo 等所有 MaxMind DB 格式的库，
+ * 因此不绑定具体厂商的文件名。
  *
  * @return string
  */
 function aurora_star_geoip_auto_path() {
 	$upload_dir = function_exists( 'aurora_star_geoip_upload_dir' ) ? aurora_star_geoip_upload_dir() : '';
 
+	// ip-database.mmdb 是当前的上传槽位；其余是 v1.3.0 的旧文件名，保留兼容。
+	$names = array( 'ip-database.mmdb', 'GeoLite2-City.mmdb', 'GeoLite2-Country.mmdb', 'GeoLite2.mmdb' );
+
 	if ( '' !== $upload_dir ) {
-		// 城市库优先于国家库。
-		foreach ( array( 'GeoLite2-City.mmdb', 'GeoLite2-Country.mmdb', 'GeoLite2.mmdb' ) as $name ) {
+		foreach ( $names as $name ) {
 			$candidate = $upload_dir . '/' . $name;
 			if ( is_readable( $candidate ) ) {
 				return $candidate;
@@ -37,7 +129,14 @@ function aurora_star_geoip_auto_path() {
 		}
 	}
 
-	return AURORA_STAR_DIR . '/assets/geoip/GeoLite2-City.mmdb';
+	foreach ( $names as $name ) {
+		$candidate = AURORA_STAR_DIR . '/assets/geoip/' . $name;
+		if ( is_readable( $candidate ) ) {
+			return $candidate;
+		}
+	}
+
+	return AURORA_STAR_DIR . '/assets/geoip/ip-database.mmdb';
 }
 
 /**
@@ -169,6 +268,119 @@ function aurora_star_geo_name( $names ) {
 }
 
 /**
+ * 取第一个非空字符串。
+ *
+ * @param mixed  $record GeoLite2 记录。
+ * @param array  $paths  候选键路径列表。
+ * @return string
+ */
+function aurora_star_geo_first_string( $record, $paths ) {
+	foreach ( $paths as $path ) {
+		$value = aurora_star_geo_pick( $record, $path );
+		if ( is_string( $value ) && '' !== trim( $value ) ) {
+			return trim( $value );
+		}
+	}
+
+	return '';
+}
+
+/**
+ * 国家代码。
+ *
+ * GeoLite2 / DB-IP 用 country.iso_code；IPinfo 等用扁平的 country / country_code。
+ *
+ * @param mixed $record 记录。
+ * @return string 两位大写国家代码，取不到返回空串。
+ */
+function aurora_star_geo_country_code( $record ) {
+	$candidates = array(
+		array( 'country', 'iso_code' ),          // MaxMind GeoLite2 / DB-IP Lite
+		array( 'registered_country', 'iso_code' ),
+		array( 'country_code' ),                 // IPinfo 系列
+		array( 'country_code2' ),
+		array( 'country' ),                      // 少数库直接给字符串
+	);
+
+	foreach ( $candidates as $path ) {
+		$value = aurora_star_geo_pick( $record, $path );
+		if ( is_string( $value ) && preg_match( '/^[A-Za-z]{2}$/', $value ) ) {
+			return strtoupper( $value );
+		}
+	}
+
+	return '';
+}
+
+/**
+ * 国家名称（优先本地化名称）。
+ *
+ * @param mixed $record 记录。
+ * @return string
+ */
+function aurora_star_geo_country_name( $record ) {
+	$name = aurora_star_geo_name( aurora_star_geo_pick( $record, array( 'country', 'names' ) ) );
+	if ( '' !== $name ) {
+		return $name;
+	}
+
+	return aurora_star_geo_first_string(
+		$record,
+		array(
+			array( 'country_name' ),
+			array( 'country', 'name' ),
+			array( 'country' ),
+		)
+	);
+}
+
+/**
+ * 一级行政区名称。
+ *
+ * @param mixed $record 记录。
+ * @return string
+ */
+function aurora_star_geo_region_name( $record ) {
+	$name = aurora_star_geo_name( aurora_star_geo_pick( $record, array( 'subdivisions', 0, 'names' ) ) );
+	if ( '' !== $name ) {
+		return $name;
+	}
+
+	// region_name 是名称，region 在 IPinfo 里是代码，所以名称优先。
+	return aurora_star_geo_first_string(
+		$record,
+		array(
+			array( 'region_name' ),
+			array( 'subdivision_name' ),
+			array( 'subdivision' ),
+			array( 'region' ),
+			array( 'state' ),
+		)
+	);
+}
+
+/**
+ * 城市名称。
+ *
+ * @param mixed $record 记录。
+ * @return string
+ */
+function aurora_star_geo_city_name( $record ) {
+	$name = aurora_star_geo_name( aurora_star_geo_pick( $record, array( 'city', 'names' ) ) );
+	if ( '' !== $name ) {
+		return $name;
+	}
+
+	return aurora_star_geo_first_string(
+		$record,
+		array(
+			array( 'city_name' ),
+			array( 'city' ),
+		)
+	);
+}
+
+/**
  * 由 IP 解析归属地。
  *
  * @param string $ip IP 地址。
@@ -201,22 +413,16 @@ function aurora_star_resolve_geo( $ip ) {
 		return $memo[ $ip ] = array();
 	}
 
-	$cc      = strtoupper( (string) aurora_star_geo_pick( $record, array( 'country', 'iso_code' ) ) );
-	$country = aurora_star_geo_name( aurora_star_geo_pick( $record, array( 'country', 'names' ) ) );
-	$region  = aurora_star_geo_name( aurora_star_geo_pick( $record, array( 'subdivisions', 0, 'names' ) ) );
-	$city    = aurora_star_geo_name( aurora_star_geo_pick( $record, array( 'city', 'names' ) ) );
-
 	// 只保留展示所需字段，避免把整条记录写进数据库。
 	$geo = array(
-		// 仅接受标准两位国家代码，'A1' / 'A2' 之类的保留值会被丢弃。
-		'cc'      => preg_match( '/^[A-Z]{2}$/', $cc ) ? $cc : '',
-		'country' => $country,
-		'region'  => $region,
-		'city'    => $city,
+		'cc'      => aurora_star_geo_country_code( $record ),
+		'country' => aurora_star_geo_country_name( $record ),
+		'region'  => aurora_star_geo_region_name( $record ),
+		'city'    => aurora_star_geo_city_name( $record ),
 	);
 
 	// 全是空值时按「查不到」处理。
-	$has_value = ( '' !== $geo['cc'] || '' !== $country || '' !== $region || '' !== $city );
+	$has_value = ( '' !== $geo['cc'] || '' !== $geo['country'] || '' !== $geo['region'] || '' !== $geo['city'] );
 
 	return $memo[ $ip ] = ( $has_value ? $geo : array() );
 }

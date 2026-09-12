@@ -383,6 +383,23 @@ function aurora_star_customize_register( $wp_customize ) {
 		)
 	);
 
+	$wp_customize->add_setting(
+		'aurora_star_geo_attribution',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_geo_attribution',
+		array(
+			'label'       => __( '在页脚显示 IP 数据来源署名', 'aurora-star' ),
+			'description' => __( 'GeoLite2（CC BY-SA 4.0）与 DB-IP Lite（CC BY 4.0）都要求在展示其数据的页面保留署名，建议保持开启。', 'aurora-star' ),
+			'section'     => 'aurora_star_comments',
+			'type'        => 'checkbox',
+		)
+	);
+
 	// ========== 文章 ==========
 	$wp_customize->add_section(
 		'aurora_star_post',

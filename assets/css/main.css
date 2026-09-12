@@ -621,6 +621,17 @@ html[data-theme="dark"] .header-search {
 	color: var(--aurora-star-primary);
 }
 
+/* IP 数据来源署名（GeoLite2 / DB-IP 的许可要求） */
+.site-footer__geo-source {
+	color: var(--aurora-star-text-3);
+	opacity: 0.85;
+}
+
+a.site-footer__geo-source {
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
 /* 公安备案徽章 */
 .aurora-police {
 	display: inline-flex;
