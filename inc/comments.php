@@ -16,23 +16,46 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ---------------------------------------------------------------------- */
 
 /**
+ * 自动探测 GeoLite2 数据库路径。
+ *
+ * 查找顺序：
+ *   1. 通过后台「Aurora Star 主题 → IP 数据库」上传的文件（wp-content/uploads/aurora-star-geoip/）
+ *   2. 主题目录 assets/geoip/ 下手动放置的文件
+ *
+ * @return string
+ */
+function aurora_star_geoip_auto_path() {
+	$upload_dir = function_exists( 'aurora_star_geoip_upload_dir' ) ? aurora_star_geoip_upload_dir() : '';
+
+	if ( '' !== $upload_dir ) {
+		// 城市库优先于国家库。
+		foreach ( array( 'GeoLite2-City.mmdb', 'GeoLite2-Country.mmdb', 'GeoLite2.mmdb' ) as $name ) {
+			$candidate = $upload_dir . '/' . $name;
+			if ( is_readable( $candidate ) ) {
+				return $candidate;
+			}
+		}
+	}
+
+	return AURORA_STAR_DIR . '/assets/geoip/GeoLite2-City.mmdb';
+}
+
+/**
  * GeoLite2 数据库文件路径。
  *
- * 默认读取主题内 assets/geoip/GeoLite2-City.mmdb。建议把 mmdb 放在主题目录
- * 之外（例如 wp-content/uploads/geoip/）并用下面的过滤器指过来，
+ * 默认按 aurora_star_geoip_auto_path() 的顺序自动查找。
+ * 建议用下面的过滤器把库指到主题目录之外（例如 wp-content/uploads/geoip/），
  * 这样升级主题时不会被覆盖。
  *
  * @return string
  */
 function aurora_star_geoip_db_path() {
-	$default = AURORA_STAR_DIR . '/assets/geoip/GeoLite2-City.mmdb';
-
 	/**
 	 * 过滤 GeoLite2 数据库文件路径。
 	 *
-	 * @param string $path 数据库绝对路径。
+	 * @param string $path 自动探测到的数据库绝对路径。
 	 */
-	return (string) apply_filters( 'aurora_star_geoip_db_path', $default );
+	return (string) apply_filters( 'aurora_star_geoip_db_path', aurora_star_geoip_auto_path() );
 }
 
 /**

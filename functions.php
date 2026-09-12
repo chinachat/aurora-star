@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AURORA_STAR_VERSION', '1.2.0' );
+define( 'AURORA_STAR_VERSION', '1.3.0' );
 define( 'AURORA_STAR_DIR', get_template_directory() );
 define( 'AURORA_STAR_URI', get_template_directory_uri() );
 
@@ -26,4 +26,5 @@ require_once AURORA_STAR_DIR . '/inc/shortcodes.php';
 require_once AURORA_STAR_DIR . '/inc/toc.php';
 require_once AURORA_STAR_DIR . '/inc/menu-walker.php';
 require_once AURORA_STAR_DIR . '/inc/comments.php';
+require_once AURORA_STAR_DIR . '/inc/geoip-admin.php';
 require_once AURORA_STAR_DIR . '/inc/admin-menu.php';

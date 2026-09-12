@@ -52,6 +52,8 @@ function aurora_star_admin_settings_page() {
 			<?php esc_html_e( '打开主题自定义器', 'aurora-star' ); ?>
 		</a>
 
+		<?php aurora_star_render_geoip_panel(); ?>
+
 		<h2 style="margin-top: 28px;"><?php esc_html_e( '快捷设置说明', 'aurora-star' ); ?></h2>
 		<table class="widefat striped" style="max-width: 720px;">
 			<thead>

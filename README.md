@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.2.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.3.0-6366f1?style=flat-square)
 
 </div>
 
@@ -27,6 +27,7 @@
 | 🌌 **极光背景** | 浅色/暗色主题各自适配的极光背景图，一键开关 |
 | 🏷️ **备案信息** | ICP 备案 + 公安备案，留空自动隐藏 |
 | 💬 **评论增强** | Gravatar 头像（可设默认图案）；昵称后显示国旗 + IP 归属地、操作系统与浏览器版本 |
+| 📤 **IP 库后台上传** | 后台直接上传/更新 GeoLite2，自动识别 `.tar.gz` / `.gz` / `.zip` / `.mmdb`，显示构建时间 |
 | 🇨🇳 **简体中文** | 内置 zh_CN 语言包，前后台界面全面中文化 |
 | 🖼️ **特色图** | 文章页大图 + 列表缩略图，可单独关闭文章内显示 |
 
@@ -100,17 +101,29 @@ fa-brands fa-github   GitHub
 
 ### 开启 IP 归属地
 
-主题**不附带** GeoLite2 数据库（几十 MB 且有独立许可），需要你自行下载：
+主题**不附带** GeoLite2 数据库（几十 MB 且有独立许可）。有两种方式：
 
-1. 到 <https://www.maxmind.com/en/geolite2/signup> 注册免费账号并下载 `GeoLite2-City.mmdb`
-2. 放到 `wp-content/themes/aurora-star/assets/geoip/GeoLite2-City.mmdb`，
-   或放到主题目录之外再用过滤器指定（推荐）：
+**方式一：后台直接上传（推荐）**
+
+1. 到 <https://www.maxmind.com/en/geolite2/signup> 注册免费账号，下载 `GeoLite2-City.tar.gz`
+2. 进入 **后台 → Aurora Star 主题 → IP 归属地数据库**，选择文件后点「上传并安装」
+3. 面板会显示数据库类型、**构建时间**、节点数与文件大小，便于确认是否已更新
+
+支持 MaxMind 官方下载的 `.tar.gz`，也支持 `.gz` / `.zip` / 直接上传 `.mmdb`。
+上传后会**先校验文件有效性再替换**，校验失败会保留原有数据库，不会把功能弄坏。
+
+**方式二：手动放置**
+
+放到 `wp-content/themes/aurora-star/assets/geoip/GeoLite2-City.mmdb`，
+或用过滤器指到主题目录之外：
 
 ```php
 add_filter( 'aurora_star_geoip_db_path', function () {
     return WP_CONTENT_DIR . '/uploads/geoip/GeoLite2-City.mmdb';
 } );
 ```
+
+**查找优先级**：过滤器 > 后台上传（`uploads/aurora-star-geoip/`，城市库优先于国家库）> 主题目录。
 
 详见 [`assets/geoip/README.md`](assets/geoip/README.md)。
 
@@ -166,6 +179,7 @@ aurora-star/
 │   ├── toc.php            # 服务端目录生成
 │   ├── menu-walker.php    # 菜单图标
 │   ├── comments.php       # 评论增强（头像 / 归属地 / UA）
+│   ├── geoip-admin.php    # IP 数据库后台上传与状态
 │   └── admin-menu.php     # 后台一级菜单
 ├── assets/
 │   ├── css/               # 主题样式（含暗色、灯箱、目录等）
@@ -181,6 +195,18 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.3.0** — IP 数据库后台上传
+
+- **新增** 后台「Aurora Star 主题 → IP 归属地数据库」面板，可直接上传/更新 GeoLite2
+- **新增** 自动识别 `.tar.gz`（MaxMind 官方格式）/ `.gz` / `.zip` / `.mmdb`，按文件头判断而非扩展名
+- **新增** 上传后**先校验再替换**：检查 MaxMind 元数据标记并用 Reader 实际打开，
+  校验失败保留原库，一次坏上传不会弄坏归属地功能
+- **新增** 数据库信息面板：类型、**构建时间**（超过 45 天提示该更新了）、大小、节点数、IP 版本
+- **新增** 上传库存放在 `wp-content/uploads/aurora-star-geoip/`，
+  优先级高于主题目录，升级主题不会丢失；支持一键删除回退
+- **修复** `tar` 大小字段解析：`octdec()` 在 PHP 8.1+ 对非八进制填充会触发 deprecation，
+  改为正则提取八进制位并处理 base-256 编码
 
 **v1.2.0** — 评论增强
 
