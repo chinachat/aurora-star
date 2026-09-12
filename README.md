@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-2.0.1-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.0.2-6366f1?style=flat-square)
 
 </div>
 
@@ -205,6 +205,26 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.0.2** — 修复 Markdown 代码块与主题代码高亮打架（配色错乱）
+
+- **修复**（观感严重）Markdown 模块的 `assets/markdown/frontend.css` 是一份**只考虑浅色**的样式表，
+  且它排在 Prism 主题与 `highlight.css` **之后**加载。其中
+  `.mdp-markdown-post .mdp-pre { background: #f6f8fa }`（特异性 0,2,0）
+  压过了 Prism 的 `pre[class*=language-] { background: #272822 }`（0,1,1）——
+  底色被换成浅灰，而 Prism 的 token 配色仍是深色主题（正文色 `#f8f8f2`），
+  于是**浅底浅字**；同一篇文章里短码 `[code]` 的代码块是深色、Markdown 代码块是浅色，
+  观感割裂；dark 模式更是刺眼白块
+- **修复** 该文件里的表格边框、行内代码、目录、脚注也全是写死的浅色值（`#e0e0e0`、`#f6f8fa`、`#3c434a` 等），
+  同样不跟随明暗模式。现在**代码块与表格观感完全交给主题**
+  （Prism 主题 + `highlight.css` + `main.css`），模块样式表只保留主题未覆盖的结构样式
+  （表格滚动容器、任务列表、`[mdp_toc]` 目录、脚注），且一律改用主题的 CSS 变量
+  `var(--aurora-star-*)`，自动跟随明暗模式
+- **副作用**：模块样式表不再需要排在 Prism 之后，加载顺序从此无关紧要
+- **验证** 新增 `test-css-layering.php`：断言模块样式表不给 `<pre>`/`<code>` 设观感属性、
+  不含写死的浅色、颜色一律走主题变量，并全主题扫查有无 `.mdp-pre`/`.mdp-code`
+  的高特异性选择器会再次压过 Prism；`test-doc-render.php` 扩展为同时验证
+  「整篇 Markdown」与「`[markdown]` 区块」两条渲染路径
 
 **v2.0.1** — 修复行内 `<code>` 里的短码被当成真短码执行
 

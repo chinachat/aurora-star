@@ -1,57 +1,32 @@
-/* Markdown 发布器：前台样式（可通过设置关闭） */
-.mdp-markdown-post .mdp-pre,
-.mdp-content .mdp-pre {
-	background: #f6f8fa;
-	border: 1px solid #e5e7eb;
-	border-radius: 6px;
-	padding: 14px 16px;
-	overflow: auto;
-	line-height: 1.6;
-	font-size: 13.5px;
-}
+/*
+ * Markdown 发布模块：前台样式（可在「Markdown 发布 → 设置」关闭）
+ *
+ * 重要：这里**不要**给 <pre> / <code> 设置 background、color、border、padding、font-size。
+ *
+ * 主题已经有一套完整的代码高亮体系：
+ *   - assets/vendor/prism/themes/prism-okaidia.min.css  代码块底色 #272822 与 token 配色
+ *   - assets/css/highlight.css                          .entry-content pre 的内边距/圆角/字体
+ *   - assets/css/main.css                               .entry-content :not(pre) > code 行内代码
+ * 本文件在它们之后加载，同优先级下后来者胜；用 `.mdp-markdown-post .mdp-pre`（0,2,0）
+ * 这种选择器压过 Prism 的 `pre[class*=language-]`（0,1,1）会把深色底换成浅色底，
+ * 而 Prism 的 token 配色仍是深色主题（正文色 #f8f8f2），结果就是浅底浅字、几乎看不见。
+ * 叠加 dark 模式更是刺眼的白块。
+ *
+ * 所以：代码块与表格的观感交给主题；本文件只保留主题没覆盖的模块专属结构，
+ * 且一律使用主题的 CSS 变量，以便跟随明暗模式。
+ */
 
-.mdp-markdown-post .mdp-pre code,
-.mdp-content .mdp-pre code {
-	background: none;
-	padding: 0;
-	font-size: inherit;
-	color: inherit;
-	white-space: pre;
-}
-
-.mdp-markdown-post :not(.mdp-pre) > code,
-.mdp-content :not(.mdp-pre) > code {
-	background: rgba(175, 184, 193, 0.22);
-	border-radius: 4px;
-	padding: 0.15em 0.4em;
-	font-size: 0.9em;
-}
-
+/* 表格横向滚动容器（表格本身的边框/配色由主题 main.css 负责） */
 .mdp-table-wrap {
 	overflow-x: auto;
-	margin: 1.2em 0;
+	margin: 1.5em 0;
 }
 
-.mdp-markdown-post table,
-.mdp-content table {
-	border-collapse: collapse;
-	width: 100%;
-	font-size: 0.96em;
+.mdp-table-wrap > table {
+	margin: 0;
 }
 
-.mdp-markdown-post table th,
-.mdp-markdown-post table td,
-.mdp-content table th,
-.mdp-content table td {
-	border: 1px solid #e0e0e0;
-	padding: 8px 12px;
-}
-
-.mdp-markdown-post table thead th,
-.mdp-content table thead th {
-	background: #f6f8fa;
-}
-
+/* 任务列表 */
 .mdp-task-item {
 	list-style: none;
 	margin-left: -1.2em;
@@ -62,11 +37,11 @@
 	vertical-align: middle;
 }
 
-/* 目录 */
+/* 目录（[mdp_toc]） */
 .mdp-toc {
-	background: #f8f9fa;
-	border: 1px solid #e5e7eb;
-	border-radius: 6px;
+	background: var(--aurora-star-surface-2);
+	border: 1px solid var(--aurora-star-border);
+	border-radius: var(--aurora-star-radius-sm);
 	padding: 14px 18px;
 	margin: 1.5em 0;
 	font-size: 0.96em;
@@ -102,12 +77,12 @@
 .mdp-footnotes {
 	margin-top: 2.5em;
 	font-size: 0.92em;
-	color: #3c434a;
+	color: var(--aurora-star-text-2);
 }
 
 .mdp-fn-sep {
 	border: 0;
-	border-top: 1px solid #e0e0e0;
+	border-top: 1px solid var(--aurora-star-border);
 	margin-bottom: 1em;
 }
 
@@ -128,7 +103,7 @@
 	opacity: 0.7;
 }
 
-/* 标题锚点偏移（配合固定头部主题） */
+/* 标题锚点偏移（配合固定头部） */
 .mdp-markdown-post h1[id],
 .mdp-markdown-post h2[id],
 .mdp-markdown-post h3[id],

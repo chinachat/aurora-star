@@ -33,7 +33,7 @@ if ( defined( 'MDP_VERSION' ) || class_exists( 'Mdp_Plugin', false ) ) {
 	return;
 }
 
-define( 'MDP_VERSION', '1.0.2' );
+define( 'MDP_VERSION', '1.0.3' );
 define( 'MDP_FILE', __FILE__ );
 define( 'MDP_DIR', __DIR__ . '/' );
 // 静态资源统一放在主题的 assets/markdown/ 下。
