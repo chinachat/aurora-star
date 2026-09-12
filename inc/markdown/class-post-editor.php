@@ -537,6 +537,12 @@ class Mdp_Post_Editor {
 	/**
 	 * kses 放行控制。
 	 *
+	 * 注意：这里只是把核心的 wp_filter_post_kses 从优先级 10 **挪到 11**，
+	 * 并没有移除它——两个优先级的过滤器在同一次 content_save_pre 里都会执行，
+	 * 核心 kses 始终生效。此处**不是**放行开关，真正的过滤发生在
+	 * sanitize_for_save() 里（无 unfiltered_html 权限时走 $plugin->kses()）。
+	 * 保留它只是为了兼容历史行为，改动前请先确认这一点。
+	 *
 	 * @param string $content 内容。
 	 * @return string
 	 */

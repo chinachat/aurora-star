@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-2.2.1-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.2.2-6366f1?style=flat-square)
 
 </div>
 
@@ -209,6 +209,23 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.2.2** — 全量安全审计，并固化安全基线
+
+- **审计结论：未发现可被利用的安全漏洞。** 覆盖 38 个 PHP 文件（约 12,000 行），
+  逐一确认了入口权限、文件上传与解包、输出转义、SQL、动态 CSS 注入、
+  短码属性注入、路径拼接、包含与动态执行、kses、CSRF、开放重定向、ABSPATH 守卫等 13 类风险面
+- **几处值得一提的设计**：零 `nopriv` 入口；零外部 HTTP 请求（GeoLite2 全本地读取，
+  SSRF 面为零）；两个解包点都写死输出路径、条目名不参与路径拼接（免疫 Zip Slip）；
+  SVG 上传默认关闭且需 `unfiltered_html`
+- **新增 `test-security.php`（35 项）**：把审计结论固化成断言，包括「未转义的裸 `echo`
+  只允许出现在 4 处白名单」「归档条目名不得用作路径」「所有 `$wpdb` 调用必须过 prepare」
+  「每条 REST 路由必须有非 `__return_true` 的权限回调」等；**新增一处即测试失败**
+- 该测试已用「植入 5 类违规的副本」验证过检出能力，对真实主题零误报
+- 补充 `maybe_suppress_kses()` 的注释：它只是把核心 kses 从优先级 10 挪到 11、**并未移除**，
+  真正的过滤在 `sanitize_for_save()`，避免后人误读为放行开关
+- 记录 4 项非漏洞的加固建议（解压体积上限、阅读数灌水、kses 注释、模块白名单略宽）
+- **本次不涉及任何功能或行为变更**
 
 **v2.2.1** — 修复 `[button]` 等短码在 Markdown 文章里链接失效
 
