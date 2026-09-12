@@ -7,6 +7,21 @@
 (function () {
 	'use strict';
 
+	// 由 wp_localize_script 注入；缺失时回退到内置文案。
+	function l10n(key, fallback) {
+		return (typeof auroraStarLightboxL10n !== 'undefined' && auroraStarLightboxL10n[key])
+			? auroraStarLightboxL10n[key]
+			: fallback;
+	}
+
+	function attrEscape(str) {
+		return String(str)
+			.replace(/&/g, '&amp;')
+			.replace(/"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	}
+
 	var lightbox = null;
 	var stage = null;
 	var imgEl = null;
@@ -19,33 +34,37 @@
 	var isDragging = false;
 	var dragStart = { x: 0, y: 0 };
 	var translate = { x: 0, y: 0 };
+	var lastFocused = null;
 
 	function build() {
 		lightbox = document.createElement('div');
 		lightbox.className = 'aurora-star-lightbox';
+		lightbox.setAttribute('role', 'dialog');
+		lightbox.setAttribute('aria-modal', 'true');
+		lightbox.setAttribute('aria-label', l10n('openImage', '图片预览'));
 		lightbox.innerHTML =
-			'<button type="button" class="aurora-star-lightbox__close" data-lb-close aria-label="关闭">' +
+			'<button type="button" class="aurora-star-lightbox__close" data-lb-close aria-label="' + attrEscape(l10n('close', '关闭')) + '">' +
 			'<i class="fa-solid fa-xmark" aria-hidden="true"></i></button>' +
 			'<div class="aurora-star-lightbox__stage">' +
 			'<img class="aurora-star-lightbox__img" alt="" />' +
 			'<div class="aurora-star-lightbox__caption"></div>' +
 			'</div>' +
 			'<div class="aurora-star-lightbox__toolbar">' +
-			'<button type="button" class="aurora-star-lightbox__btn" data-lb-zoom-out aria-label="缩小">' +
+			'<button type="button" class="aurora-star-lightbox__btn" data-lb-zoom-out aria-label="' + attrEscape(l10n('zoomOut', '缩小')) + '">' +
 			'<i class="fa-solid fa-minus" aria-hidden="true"></i></button>' +
 			'<span class="aurora-star-lightbox__zoom-level">100%</span>' +
-			'<button type="button" class="aurora-star-lightbox__btn" data-lb-zoom-in aria-label="放大">' +
+			'<button type="button" class="aurora-star-lightbox__btn" data-lb-zoom-in aria-label="' + attrEscape(l10n('zoomIn', '放大')) + '">' +
 			'<i class="fa-solid fa-plus" aria-hidden="true"></i></button>' +
-			'<button type="button" class="aurora-star-lightbox__btn" data-lb-reset aria-label="重置">' +
+			'<button type="button" class="aurora-star-lightbox__btn" data-lb-reset aria-label="' + attrEscape(l10n('reset', '重置')) + '">' +
 			'<i class="fa-solid fa-rotate" aria-hidden="true"></i></button>' +
-			'<button type="button" class="aurora-star-lightbox__btn" data-lb-rotate aria-label="旋转">' +
+			'<button type="button" class="aurora-star-lightbox__btn" data-lb-rotate aria-label="' + attrEscape(l10n('rotate', '旋转')) + '">' +
 			'<i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>' +
-			'<button type="button" class="aurora-star-lightbox__btn" data-lb-prev aria-label="上一张">' +
+			'<button type="button" class="aurora-star-lightbox__btn" data-lb-prev aria-label="' + attrEscape(l10n('prev', '上一张')) + '">' +
 			'<i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>' +
-			'<button type="button" class="aurora-star-lightbox__btn" data-lb-next aria-label="下一张">' +
+			'<button type="button" class="aurora-star-lightbox__btn" data-lb-next aria-label="' + attrEscape(l10n('next', '下一张')) + '">' +
 			'<i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>' +
 			'</div>' +
-			'<div class="aurora-star-lightbox__hint">滚动或按钮缩放 · 拖动平移 · ESC 关闭</div>';
+			'<div class="aurora-star-lightbox__hint">' + attrEscape(l10n('hint', '滚动或按钮缩放 · 拖动平移 · ESC 关闭')) + '</div>';
 
 		document.body.appendChild(lightbox);
 		stage = lightbox.querySelector('.aurora-star-lightbox__stage');
@@ -84,7 +103,8 @@
 		window.addEventListener('mouseup', endDrag);
 
 		imgEl.addEventListener('touchstart', startTouch, { passive: true });
-		imgEl.addEventListener('touchmove', onTouch, { passive: true });
+		// onTouch 内部会调用 preventDefault()，必须使用非 passive 监听，否则手势与页面滚动会同时生效。
+		imgEl.addEventListener('touchmove', onTouch, { passive: false });
 		imgEl.addEventListener('touchend', endTouch);
 
 		// 键盘。
@@ -184,9 +204,6 @@
 	}
 
 	function applyTransform() {
-		if (rot % 180 !== 0 && scale > 1) {
-			// 旋转 90/270 时限制平移范围。
-		}
 		imgEl.style.transform =
 			'translate(' + translate.x + 'px,' + translate.y + 'px) ' +
 			'scale(' + scale + ') ' +
@@ -228,15 +245,25 @@
 	}
 
 	function open(index) {
+		lastFocused = document.activeElement;
 		load(index);
 		lightbox.classList.add('is-open');
 		document.body.style.overflow = 'hidden';
+		var closeBtn = lightbox.querySelector('[data-lb-close]');
+		if (closeBtn) {
+			closeBtn.focus();
+		}
 	}
 
 	function close() {
 		lightbox.classList.remove('is-open');
 		document.body.style.overflow = '';
 		reset();
+		// 关闭后把焦点还给触发元素，避免键盘用户丢失位置。
+		if (lastFocused && typeof lastFocused.focus === 'function') {
+			lastFocused.focus();
+		}
+		lastFocused = null;
 	}
 
 	function prev() { load(currentIndex - 1); }
@@ -257,7 +284,14 @@
 			});
 			if (!img.dataset.lbBound) {
 				img.dataset.lbBound = '1';
-				img.addEventListener('click', function () {
+				// 让键盘用户也能打开灯箱。
+				img.setAttribute('tabindex', '0');
+				img.setAttribute('role', 'button');
+				if (!img.getAttribute('aria-label')) {
+					img.setAttribute('aria-label', l10n('openImage', '放大图片'));
+				}
+
+				var handler = function () {
 					var idx = 0;
 					for (var i = 0; i < images.length; i++) {
 						if (images[i].src === src) {
@@ -266,6 +300,14 @@
 						}
 					}
 					open(idx);
+				};
+
+				img.addEventListener('click', handler);
+				img.addEventListener('keydown', function (e) {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault();
+						handler();
+					}
 				});
 			}
 		});
@@ -275,11 +317,20 @@
 		build();
 		collectImages();
 
-		// 内容异步加载时（如插件懒加载）监听。
+		// 只观察正文区域（而不是整个 body），并对回调做防抖：
+		// 翻图时 load() 会写入 caption，全量观察会造成无意义的重复收集。
+		var timer = null;
 		var observer = new MutationObserver(function () {
-			collectImages();
+			if (lightbox.classList.contains('is-open')) {
+				return;
+			}
+			if (timer) {
+				clearTimeout(timer);
+			}
+			timer = setTimeout(collectImages, 200);
 		});
-		observer.observe(document.body, { childList: true, subtree: true });
+		var scope = document.querySelector('.entry-content') || document.body;
+		observer.observe(scope, { childList: true, subtree: true });
 	}
 
 	if (document.readyState === 'loading') {

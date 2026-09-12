@@ -1,10 +1,30 @@
 /**
  * Aurora Star 主脚本
  * - 移动端导航
+ * - 标签页 / 手风琴短码
  * - 全局浮动导航（返回顶部 + 分享）
  */
 (function () {
 	'use strict';
+
+	// 由 wp_localize_script 注入；缺失时回退到内置文案，保证脚本可独立运行。
+	var L10N = (typeof auroraL10n !== 'undefined' && auroraL10n) ? auroraL10n : {};
+
+	function t(key, fallback) {
+		return L10N[key] ? L10N[key] : fallback;
+	}
+
+	function setInert(el, inert) {
+		if (!el) {
+			return;
+		}
+		// 关闭状态下容器内的控件不应可聚焦；不支持的浏览器会忽略该赋值。
+		if (inert) {
+			el.setAttribute('inert', '');
+		} else {
+			el.removeAttribute('inert');
+		}
+	}
 
 	// 移动端导航
 	function initNav() {
@@ -35,18 +55,107 @@
 			});
 		}
 
-		// 移动端子菜单展开。
+		// 移动端子菜单：点箭头图标展开/收起，点文字正常跳转（含 Ctrl/⌘ 新标签页）。
 		nav.querySelectorAll('.menu-item-has-children > a').forEach(function (link) {
+			link.setAttribute('aria-haspopup', 'true');
+			link.setAttribute('aria-expanded', 'false');
+
 			link.addEventListener('click', function (e) {
-				if (window.innerWidth <= 991) {
-					e.preventDefault();
-					var li = link.closest('li');
-					if (li) {
-						var expanded = li.classList.contains('is-expanded');
-						li.classList.toggle('is-expanded', !expanded);
-						link.setAttribute('aria-expanded', String(!expanded));
-					}
+				if (window.innerWidth > 991) {
+					return;
 				}
+				if (!e.target || !e.target.closest || !e.target.closest('.menu-item-caret')) {
+					return;
+				}
+				e.preventDefault();
+				var li = link.closest('li');
+				if (!li) {
+					return;
+				}
+				var expanded = li.classList.contains('is-expanded');
+				li.classList.toggle('is-expanded', !expanded);
+				link.setAttribute('aria-expanded', String(!expanded));
+			});
+		});
+	}
+
+	// 标签页短码 [tabs]
+	function initTabs() {
+		document.querySelectorAll('[data-aurora-tabs]').forEach(function (root) {
+			// 限定为导航/内容区的直接子元素，避免嵌套 [tabs] 时把内层标签页算进来。
+			var navRoot = root.querySelector('.aurora-star-tabs-nav');
+			var paneRoot = root.querySelector('.aurora-star-tabs-content');
+			var tabs = navRoot ? Array.prototype.slice.call(navRoot.querySelectorAll(':scope > [role="tab"]')) : [];
+			var panes = paneRoot ? Array.prototype.slice.call(paneRoot.querySelectorAll(':scope > [role="tabpanel"]')) : [];
+			if (!tabs.length || tabs.length !== panes.length) {
+				return;
+			}
+
+			function activate(index) {
+				tabs.forEach(function (tab, i) {
+					var active = (i === index);
+					tab.classList.toggle('is-active', active);
+					tab.setAttribute('aria-selected', active ? 'true' : 'false');
+					tab.tabIndex = active ? 0 : -1;
+				});
+				panes.forEach(function (pane, i) {
+					pane.classList.toggle('is-active', i === index);
+				});
+			}
+
+			tabs.forEach(function (tab, i) {
+				tab.addEventListener('click', function () {
+					activate(i);
+				});
+
+				// ARIA 标签页模式：左右/Home/End 键切换并移动焦点。
+				tab.addEventListener('keydown', function (e) {
+					var next = null;
+					if (e.key === 'ArrowRight') {
+						next = (i + 1) % tabs.length;
+					} else if (e.key === 'ArrowLeft') {
+						next = (i - 1 + tabs.length) % tabs.length;
+					} else if (e.key === 'Home') {
+						next = 0;
+					} else if (e.key === 'End') {
+						next = tabs.length - 1;
+					}
+					if (next === null) {
+						return;
+					}
+					e.preventDefault();
+					activate(next);
+					tabs[next].focus();
+				});
+			});
+
+			// 与服务端首屏状态对齐。
+			var current = tabs.indexOf(navRoot.querySelector(':scope > [role="tab"].is-active'));
+			activate(current > -1 ? current : 0);
+		});
+	}
+
+	// 手风琴短码 [accordion]
+	function initAccordion() {
+		document.querySelectorAll('[data-aurora-accordion]').forEach(function (root) {
+			root.querySelectorAll('[data-aurora-accordion-item]').forEach(function (item) {
+				var head = item.querySelector('.aurora-star-accordion-head');
+				var body = item.querySelector('.aurora-star-accordion-body');
+				if (!head || !body) {
+					return;
+				}
+
+				function sync(open) {
+					item.classList.toggle('is-open', open);
+					head.setAttribute('aria-expanded', open ? 'true' : 'false');
+					setInert(body, !open);
+				}
+
+				sync(item.classList.contains('is-open'));
+
+				head.addEventListener('click', function () {
+					sync(!item.classList.contains('is-open'));
+				});
 			});
 		});
 	}
@@ -106,6 +215,10 @@
 			}
 			popover.classList.toggle('is-open', open);
 			popover.setAttribute('aria-hidden', open ? 'false' : 'true');
+			setInert(popover, !open);
+			if (open && shareClose) {
+				shareClose.focus();
+			}
 		}
 
 		if (shareBtn && popover) {
@@ -115,11 +228,26 @@
 			});
 		}
 
+		// 初始为关闭：同步 aria-hidden 与 inert。
+		setPopover(false);
+
 		if (shareClose) {
 			shareClose.addEventListener('click', function () {
 				setPopover(false);
+				if (shareBtn) {
+					shareBtn.focus();
+				}
 			});
 		}
+
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && popover && popover.classList.contains('is-open')) {
+				setPopover(false);
+				if (shareBtn) {
+					shareBtn.focus();
+				}
+			}
+		});
 
 		document.addEventListener('click', function (e) {
 			if (popover && popover.classList.contains('is-open') &&
@@ -145,7 +273,7 @@
 		if (wechat) {
 			wechat.addEventListener('click', function (e) {
 				e.preventDefault();
-				showToast('微信内请使用右上角 ··· 分享');
+				showToast(t('wechatHint', '微信内请使用右上角 ··· 分享'));
 			});
 		}
 
@@ -199,7 +327,7 @@
 				document.execCommand('copy');
 				showToast();
 			} catch (err) {
-				showToast('复制失败，请手动复制地址');
+				showToast(t('copyFailed', '复制失败，请手动复制地址'));
 			}
 			document.body.removeChild(ta);
 		}
@@ -221,10 +349,14 @@
 			toggle.classList.toggle('is-active', open);
 			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 			panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+			setInert(panel, !open);
 			if (open && input) {
 				setTimeout(function () { input.focus(); }, 60);
 			}
 		}
+
+		// 初始为关闭：关闭状态下输入框不应可聚焦。
+		setOpen(false);
 
 		toggle.addEventListener('click', function (e) {
 			e.stopPropagation();
@@ -256,6 +388,8 @@
 
 	document.addEventListener('DOMContentLoaded', function () {
 		initNav();
+		initTabs();
+		initAccordion();
 		initFloatingNav();
 		initHeaderSearch();
 	});

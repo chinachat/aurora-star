@@ -9,9 +9,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AURORA_STAR_VERSION', '1.1.4' );
+define( 'AURORA_STAR_VERSION', '1.1.5' );
 define( 'AURORA_STAR_DIR', get_template_directory() );
 define( 'AURORA_STAR_URI', get_template_directory_uri() );
+
+// 阅读数：meta key 沿用历史键名，避免升级后既有统计丢失。
+define( 'AURORA_STAR_VIEW_META', 'aurora_star_views' );
+define( 'AURORA_STAR_VIEW_COOKIE', 'aurora_star_views' );
+// 去重 Cookie 中最多记住多少篇文章：体积恒定（约 300 字节），远低于 4096 字节上限。
+define( 'AURORA_STAR_VIEW_COOKIE_MAX', 50 );
 
 require_once AURORA_STAR_DIR . '/inc/setup.php';
 require_once AURORA_STAR_DIR . '/inc/enqueue.php';

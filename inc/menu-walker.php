@@ -142,9 +142,21 @@ add_filter( 'wp_nav_menu_item_custom_fields', 'aurora_star_menu_item_icon_field'
  * @param array $menu_item_db_id 菜单项 ID 列表。
  */
 function aurora_star_menu_item_icon_save( $menu_id, $menu_item_db_id ) {
-	if ( isset( $_POST['aurora_star_menu_icon'][ $menu_item_db_id ] ) ) {
-		$icon = sanitize_text_field( wp_unslash( $_POST['aurora_star_menu_icon'][ $menu_item_db_id ] ) );
-		update_post_meta( $menu_item_db_id, '_aurora_star_menu_icon', $icon );
+	// AJAX「添加菜单项」与自定义器保存菜单时并不会提交本主题的图标字段，
+	// 此时直接 return，避免静默清除已配置的图标。
+	if ( ! isset( $_POST['aurora_star_menu_icon'] ) || ! is_array( $_POST['aurora_star_menu_icon'] ) ) {
+		return;
+	}
+
+	$icons = wp_unslash( $_POST['aurora_star_menu_icon'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+	if ( isset( $icons[ $menu_item_db_id ] ) ) {
+		$icon = sanitize_text_field( $icons[ $menu_item_db_id ] );
+		if ( '' === $icon ) {
+			delete_post_meta( $menu_item_db_id, '_aurora_star_menu_icon' );
+		} else {
+			update_post_meta( $menu_item_db_id, '_aurora_star_menu_icon', $icon );
+		}
 	} else {
 		delete_post_meta( $menu_item_db_id, '_aurora_star_menu_icon' );
 	}

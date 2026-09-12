@@ -47,10 +47,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</span>
 				<span class="post-card__meta-item">
 					<i class="fa-regular fa-eye" aria-hidden="true"></i>
-					<?php
-					$views = get_post_meta( get_the_ID(), 'aurora_star_views', true );
-					echo esc_html( $views ? $views : 0 );
-					?>
+					<span class="screen-reader-text"><?php esc_html_e( '阅读数', 'aurora-star' ); ?></span>
+					<?php echo esc_html( number_format_i18n( aurora_star_get_views( get_the_ID() ) ) ); ?>
 				</span>
 				<span class="post-card__meta-item post-card__meta-more">
 					<?php esc_html_e( '阅读全文', 'aurora-star' ); ?>

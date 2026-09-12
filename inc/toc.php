@@ -166,6 +166,48 @@ function aurora_star_toc( $post_id = 0 ) {
 }
 
 /**
+ * 注册文章选项 meta，并开放给 REST，使区块编辑器可以读写。
+ *
+ * 不注册 meta 的话，区块编辑器通过 REST 保存文章时不会提交元框表单，
+ * 「隐藏本文浮动目录」在 Gutenberg 下会静默失效。
+ */
+function aurora_star_register_toc_meta() {
+	foreach ( array( 'post', 'page' ) as $post_type ) {
+		register_post_meta(
+			$post_type,
+			'_aurora_star_disable_toc',
+			array(
+				'type'              => 'boolean',
+				'single'            => true,
+				'default'           => false,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'auth_callback'     => function ( $allowed, $meta_key, $post_id ) {
+					return current_user_can( 'edit_post', $post_id );
+				},
+			)
+		);
+	}
+}
+add_action( 'init', 'aurora_star_register_toc_meta' );
+
+/**
+ * 区块编辑器侧栏面板脚本。
+ */
+function aurora_star_block_editor_assets() {
+	wp_enqueue_script(
+		'aurora-star-editor-panel',
+		AURORA_STAR_URI . '/assets/js/editor-panel.js',
+		array( 'wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-i18n' ),
+		AURORA_STAR_VERSION,
+		true
+	);
+
+	wp_set_script_translations( 'aurora-star-editor-panel', 'aurora-star', AURORA_STAR_DIR . '/languages' );
+}
+add_action( 'enqueue_block_editor_assets', 'aurora_star_block_editor_assets' );
+
+/**
  * 文章元框：禁用目录（经典编辑器）。
  */
 function aurora_star_toc_meta_box() {

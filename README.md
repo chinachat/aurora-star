@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.1.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.1.5-6366f1?style=flat-square)
 
 </div>
 
@@ -82,6 +82,30 @@ fa-solid fa-folder    归档
 fa-brands fa-github   GitHub
 ```
 
+## 🔌 开发者钩子
+
+| 过滤器 | 说明 |
+|---|---|
+| `aurora_star_code_scan` | 覆盖代码块扫描结果。正文由小工具/插件在渲染期生成代码块时使用：<br>`add_filter( 'aurora_star_code_scan', function ( $scan ) { $scan['has_code'] = true; return $scan; } );` |
+| `aurora_star_prism_languages` | 覆盖入队的 Prism 语言组件（默认按正文实际用到的语言 + 自动识别集合计算） |
+| `aurora_star_allow_svg_upload` | 默认 `false`。SVG 可携带脚本，开放前请确认上传权限仅限可信用户 |
+| `aurora_star_should_track_view` | 返回 `false` 可完全关闭当前请求的阅读数统计 |
+| `aurora_star_count_logged_in_views` | 默认 `false`（登录用户不计数），设为 `true` 可统计登录用户 |
+| `aurora_star_content_width` | 内容宽度，默认 800 |
+
+### 阅读数说明
+
+- 统计对象：**单篇文章**的正常 GET 请求；预览、自定义器预览、Feed、robots、REST、AJAX、Cron 均不计入。
+- 去重：基于 `aurora_star_views` Cookie 记住最近 **50** 篇已读文章（体积恒定约 200 字节）。
+  超出 50 篇后最早的记录会被淘汰，此时重访那些旧文章会再计一次 —— 这是有界 Cookie 的固有取舍，
+  换来的是不会像无上限追加那样在超过 4KB 后被浏览器整体丢弃、导致去重彻底失效。
+- 反爬：空 User-Agent 与常见爬虫 / 监控探针 / 脚本客户端不计入。
+- **页面缓存**：整页缓存命中时 PHP 不执行，阅读数不会增长；若需要缓存下的统计，请改用前端 beacon + REST 接口。
+- 计数写入采用单条 `UPDATE ... meta_value + 1`，避免并发下丢失计数。
+
+> 语言包放在主题的 `languages/` 目录时，文件名必须**严格等于 locale**（如 `zh_CN.mo`），
+> 不能写成 `aurora-star-zh_CN.mo`——后者只有放在 `wp-content/languages/themes/` 下才会被识别。
+
 ## 🗂️ 项目结构
 
 ```
@@ -108,6 +132,31 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.1.5** — 代码审查修复
+
+- **修复** `[tabs]` / `[accordion]` 短码缺少前端切换脚本（手风琴内容此前完全不可见）
+- **修复** `[youtube]` 短码视频 ID 被强制小写导致播放失败
+- **修复** `[code line="true"]` 在关闭全局行号时静默失效
+- **修复** 语言包文件名不合规（`aurora-star-zh_CN.mo` → `zh_CN.mo`），此前从未被加载
+- **修复** 暗黑模式在页脚初始化导致的暗色首屏白闪
+- **修复** 灯箱正则破坏 `<img>` 标签（`/ data-lightbox>`、属性值内含 `>` 时被误改）
+- **修复** 灯箱触屏手势因 `passive` 监听器失效
+- **修复** 主色之外的派生色 `--aurora-star-primary-soft` 未随主色更新
+- **修复** 移动端带子菜单的父级页面无法访问
+- **修复** 目录元框在区块编辑器下无法保存（已注册 meta + 侧栏面板）
+- **修复** 菜单图标在非完整表单提交时被静默删除
+- **性能** Prism 仅在正文含代码块时加载，并按实际语言按需加载
+- **性能** 目录/灯箱的 `MutationObserver` 收窄作用域并防抖，滚动回调按帧合并
+- **重构** 阅读数：去重 Cookie 改为有界列表（恒定约 200 字节）、加爬虫过滤、改用原子 `UPDATE` 自增、`setcookie` 提前到 `template_redirect` 避免 headers already sent
+- **清理** 删除死代码：`template-parts/content.php`、`aurora_star_shortcode_content()`、`aurora_star_shortcodes_admin_notice()`
+- **无障碍** 弹层关闭时同步 `inert`、标签页补全 ARIA 关系与方向键支持、封面卡片补阅读数读屏文本
+- **安全** SVG 上传默认关闭（需通过 `aurora_star_allow_svg_upload` 过滤器显式开启）
+
+**v1.1.4** — 补充通用行号 CSS
+**v1.1.3** — 修复 Gutenberg 代码块行号不显示
+**v1.1.2** — 禁用 Prism 自动高亮，消除行号竞态
+**v1.1.1** — 代码高亮增加行号开关与自动换行设置
 
 **v1.1.0** — 搜索与备案增强
 

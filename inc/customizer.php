@@ -457,7 +457,7 @@ function aurora_star_customize_register( $wp_customize ) {
 		)
 	);
 
-	// 输出动态 CSS。
+	// 页脚版权支持选择性刷新。
 	$wp_customize->selective_refresh->add_partial(
 		'aurora_star_footer_text',
 		array(
@@ -533,13 +533,61 @@ function aurora_star_footer_copyright() {
 }
 
 /**
- * 输出主题动态 CSS（主色 + 极光背景）。
+ * 十六进制颜色转 rgba()。
+ *
+ * @param string $hex   颜色值（#rgb / #rrggbb）。
+ * @param string $alpha 透明度字符串（如 '0.12'），用字符串避免浮点格式受语言环境影响。
+ * @return string 解析失败时返回空字符串。
+ */
+function aurora_star_hex_to_rgba( $hex, $alpha ) {
+	$hex = ltrim( (string) $hex, '#' );
+
+	if ( 3 === strlen( $hex ) ) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+
+	if ( ! preg_match( '/^[0-9a-f]{6}$/i', $hex ) ) {
+		return '';
+	}
+
+	return sprintf(
+		'rgba(%d, %d, %d, %s)',
+		hexdec( substr( $hex, 0, 2 ) ),
+		hexdec( substr( $hex, 2, 2 ) ),
+		hexdec( substr( $hex, 4, 2 ) ),
+		$alpha
+	);
+}
+
+/**
+ * 输出主题动态 CSS（主色 + 派生色 + 极光背景）。
  */
 function aurora_star_dynamic_css() {
-	$primary = get_theme_mod( 'aurora_star_primary_color', '#6366f1' );
-	$link    = get_theme_mod( 'aurora_star_link_color', '#4f46e5' );
+	$primary = sanitize_hex_color( get_theme_mod( 'aurora_star_primary_color', '#6366f1' ) );
+	$link    = sanitize_hex_color( get_theme_mod( 'aurora_star_link_color', '#4f46e5' ) );
 
-	$css = ':root{--aurora-star-primary:' . $primary . ';--aurora-star-link:' . $link . ';}';
+	if ( ! $primary ) {
+		$primary = '#6366f1';
+	}
+	if ( ! $link ) {
+		$link = '#4f46e5';
+	}
+
+	// --aurora-star-primary-soft 被 8 处样式引用，必须随主色一起派生，
+	// 否则用户改主色后导航激活态/标签悬停/目录高亮仍是默认靛蓝。
+	$soft_light = aurora_star_hex_to_rgba( $primary, '0.12' );
+	$soft_dark  = aurora_star_hex_to_rgba( $primary, '0.18' );
+
+	$css = ':root{--aurora-star-primary:' . $primary . ';--aurora-star-link:' . $link . ';';
+	if ( $soft_light ) {
+		$css .= '--aurora-star-primary-soft:' . $soft_light . ';';
+	}
+	$css .= '}';
+
+	if ( $soft_dark ) {
+		// 覆盖 dark.css 中硬编码的暗色派生值（属性选择器优先级更高）。
+		$css .= 'html[data-theme="dark"]{--aurora-star-primary-soft:' . $soft_dark . ';}';
+	}
 
 	if ( get_theme_mod( 'aurora_star_bg_enable', true ) ) {
 		$bg_url = get_template_directory_uri() . '/assets/img/bg-aurora-light.svg';

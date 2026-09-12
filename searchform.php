@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$aurora_star_search_id = 'search-' . uniqid();
+$aurora_star_search_id = wp_unique_id( 'search-' );
 ?>
 <form role="search" method="get" class="search-form" action="<?php echo esc_url( home_url( '/' ) ); ?>">
 	<label for="<?php echo esc_attr( $aurora_star_search_id ); ?>" class="screen-reader-text"><?php esc_html_e( '搜索：', 'aurora-star' ); ?></label>

@@ -399,8 +399,17 @@ th {
 		display: flex;
 	}
 
+	/* 移动端：箭头图标独立承担展开/收起，需提供足够大的点击热区。
+	   点文字仍走原生跳转，因此父级页面在移动端可以访问。 */
 	.menu-item-caret {
 		margin-left: auto;
+		margin-right: -12px;
+		padding: 12px;
+		font-size: 0.85em;
+	}
+
+	.site-nav li.is-expanded > a .menu-item-caret {
+		transform: rotate(180deg);
 	}
 }
 

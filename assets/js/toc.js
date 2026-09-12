@@ -168,6 +168,10 @@
 	// ---------- 事件绑定 ----------
 	links.forEach(function (link) {
 		link.addEventListener('click', function (e) {
+			// 带修饰键或非左键的点击交给浏览器处理（新标签页 / 新窗口打开）。
+			if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+				return;
+			}
 			e.preventDefault();
 			var id = link.getAttribute('href').replace('#', '');
 			scrollToId(id);
@@ -200,28 +204,55 @@
 		});
 	}
 
+	var userToggled = false;
 	var mobileBtn = document.querySelector('[data-toc-mobile-btn]');
 	if (mobileBtn) {
 		mobileBtn.addEventListener('click', function () {
+			userToggled = true;
 			toc.classList.toggle('is-visible');
 		});
 	}
 
 	function visibility() {
 		if (window.innerWidth >= 1280) {
+			// 桌面端始终显示浮动目录。
 			toc.classList.add('is-visible');
-		} else {
+			return;
+		}
+		// 窄屏下不覆盖用户手动展开的状态。
+		if (!userToggled) {
 			toc.classList.remove('is-visible');
 		}
 	}
 
-	window.addEventListener('scroll', onScroll, { passive: true });
+	// 滚动回调按帧合并：否则每个 scroll 事件都会对所有标题做 getBoundingClientRect()。
+	var raf = window.requestAnimationFrame || function (fn) { return setTimeout(fn, 16); };
+	var scrollScheduled = false;
+
+	function onScrollThrottled() {
+		if (scrollScheduled) {
+			return;
+		}
+		scrollScheduled = true;
+		raf(function () {
+			scrollScheduled = false;
+			onScroll();
+		});
+	}
+
+	window.addEventListener('scroll', onScrollThrottled, { passive: true });
 	window.addEventListener('resize', visibility, { passive: true });
 
+	// 进度条只依赖文档总高度，观察正文容器并防抖即可（避免全量监听 body）。
+	var progressTimer = null;
 	var observer = new MutationObserver(function () {
-		updateProgress();
+		if (progressTimer) {
+			clearTimeout(progressTimer);
+		}
+		progressTimer = setTimeout(updateProgress, 200);
 	});
-	observer.observe(document.body, { childList: true, subtree: true });
+	var observerScope = document.querySelector('.entry-content') || document.body;
+	observer.observe(observerScope, { childList: true, subtree: true });
 
 	initDepthState();
 	visibility();

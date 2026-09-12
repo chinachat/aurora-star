@@ -10,25 +10,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * 提取短码内部 HTML（处理嵌套）。
- *
- * @param array  $attrs    短码属性。
- * @param string $content  内容。
- * @param string $inner_tag 内部标签。
- * @return string
- */
-function aurora_star_shortcode_content( $content, $inner_tag ) {
-	if ( false !== strpos( $content, '[' ) ) {
-		$content = do_shortcode( $content );
-	}
-	$inner = trim( $content );
-	if ( ! empty( $inner ) ) {
-		return '<' . $inner_tag . '>' . $inner . '</' . $inner_tag . '>';
-	}
-	return '';
-}
-
-/**
  * [button] 按钮。
  * 用法：[button href="https://example.com" color="primary" size="md" target="_blank" rel="nofollow"]文字[/button]
  *
@@ -159,8 +140,10 @@ function aurora_star_sc_tabs( $atts, $content = '' ) {
 	}
 
 	$active = max( 1, (int) $atts['active'] );
+	$group  = wp_unique_id( 'aurora-star-tabs-' );
 
-	$nav  = '<div class="aurora-star-tabs" role="tablist">';
+	// 注意：role="tablist" 只能出现在直接包含 role="tab" 的元素上（此处为 .aurora-star-tabs-nav）。
+	$nav  = '<div class="aurora-star-tabs" data-aurora-tabs>';
 	$nav .= '<div class="aurora-star-tabs-nav" role="tablist">';
 
 	$panes = '';
@@ -173,13 +156,23 @@ function aurora_star_sc_tabs( $atts, $content = '' ) {
 		if ( empty( $title ) ) {
 			$title = __( '标签', 'aurora-star' ) . ' ' . $i;
 		}
-		$title = do_shortcode( $title );
+		// 标题来自短码属性（正文），可能未经 kses 过滤（导入/REST/插件写入），必须过滤后再输出。
+		$title = wp_kses_post( do_shortcode( $title ) );
 
-		$id      = 'aurora-star-tab-' . wp_generate_password( 6, false, false );
-		$is_act  = ( $i === $active ) ? ' is-active' : '';
+		$tab_id   = $group . 'tab-' . $i;
+		$pane_id  = $group . 'pane-' . $i;
+		$is_act   = ( $i === $active );
+		$class    = 'aurora-star-tabs-tab' . ( $is_act ? ' is-active' : '' );
 
-		$nav .= '<button type="button" class="aurora-star-tabs-tab' . $is_act . '" role="tab" aria-selected="' . ( $is_act ? 'true' : 'false' ) . '" aria-controls="' . $id . '">' . $title . '</button>';
-		$panes .= '<div class="aurora-star-tabs-pane' . $is_act . '" id="' . $id . '" role="tabpanel">' . do_shortcode( $match[5] ) . '</div>';
+		$nav  .= '<button type="button" id="' . esc_attr( $tab_id ) . '" class="' . esc_attr( $class ) . '"'
+			. ' role="tab" aria-selected="' . ( $is_act ? 'true' : 'false' ) . '"'
+			. ' aria-controls="' . esc_attr( $pane_id ) . '" tabindex="' . ( $is_act ? '0' : '-1' ) . '">'
+			. $title . '</button>';
+
+		$panes .= '<div class="aurora-star-tabs-pane' . ( $is_act ? ' is-active' : '' ) . '"'
+			. ' id="' . esc_attr( $pane_id ) . '" role="tabpanel"'
+			. ' aria-labelledby="' . esc_attr( $tab_id ) . '" tabindex="0">'
+			. do_shortcode( $match[5] ) . '</div>';
 	}
 
 	$nav  .= '</div>';
@@ -221,20 +214,28 @@ function aurora_star_sc_accordion( $atts, $content = '' ) {
 		return do_shortcode( $content );
 	}
 
-	$html = '<div class="aurora-star-accordion">';
+	$html  = '<div class="aurora-star-accordion" data-aurora-accordion>';
+	$group = wp_unique_id( 'aurora-star-acc-' );
+	$i     = 0;
 	foreach ( $matches as $match ) {
+		$i++;
 		$item_atts = shortcode_parse_atts( $match[3] );
 		$title     = isset( $item_atts['title'] ) ? $item_atts['title'] : __( '标题', 'aurora-star' );
 		$open      = isset( $item_atts['open'] ) && 'true' === $item_atts['open'];
-		$id        = 'aurora-star-acc-' . wp_generate_password( 6, false, false );
+		$head_id   = $group . 'head-' . $i;
+		$body_id   = $group . 'body-' . $i;
 
-		$html .= '<div class="aurora-star-accordion-item' . ( $open ? ' is-open' : '' ) . '">';
-		$html .= '<button type="button" class="aurora-star-accordion-head" aria-expanded="' . ( $open ? 'true' : 'false' ) . '" aria-controls="' . $id . '">';
+		$html .= '<div class="aurora-star-accordion-item' . ( $open ? ' is-open' : '' ) . '" data-aurora-accordion-item>';
+		$html .= '<button type="button" id="' . esc_attr( $head_id ) . '" class="aurora-star-accordion-head"'
+			. ' aria-expanded="' . ( $open ? 'true' : 'false' ) . '"'
+			. ' aria-controls="' . esc_attr( $body_id ) . '">';
 		$html .= '<span class="aurora-star-accordion-title">' . esc_html( $title ) . '</span>';
 		$html .= '<i class="fa-solid fa-chevron-down aurora-star-accordion-icon" aria-hidden="true"></i>';
 		$html .= '</button>';
-		$html .= '<div class="aurora-star-accordion-body" id="' . $id . '">';
-		$html .= do_shortcode( $match[5] );
+		$html .= '<div class="aurora-star-accordion-body" id="' . esc_attr( $body_id ) . '"'
+			. ' role="region" aria-labelledby="' . esc_attr( $head_id ) . '">';
+		// 内层容器提供内边距（见 main.css 的 .aurora-star-accordion-body-inner）。
+		$html .= '<div class="aurora-star-accordion-body-inner">' . do_shortcode( $match[5] ) . '</div>';
 		$html .= '</div></div>';
 	}
 	$html .= '</div>';
@@ -280,8 +281,9 @@ function aurora_star_sc_code( $atts, $content = '' ) {
 	$code = preg_replace( '/<\/code>$/i', '', $code );
 	$code = html_entity_decode( $code, ENT_QUOTES | ENT_HTML5, get_bloginfo( 'charset' ) );
 
-	$lang = strtolower( sanitize_html_class( $atts['lang'] ) );
-	$cls  = 'language-' . ( $lang ? $lang : 'markup' );
+	// 别名归一化（c++ → cpp 等）；sanitize_html_class 会剥掉 + / #，不能直接用。
+	$lang  = aurora_star_normalize_prism_language( $atts['lang'] );
+	$cls   = 'language-' . ( $lang ? $lang : 'markup' );
 	$extra = '';
 
 	// line 属性：true=强制显示行号，false=强制隐藏，auto/未指定=跟随全局设置。
@@ -322,9 +324,19 @@ function aurora_star_sc_youtube( $atts ) {
 		return '';
 	}
 
-	$id = sanitize_title( $atts['id'] );
+	// YouTube 视频 ID 大小写敏感，不能用 sanitize_title()（它内部会强制 strtolower）。
+	$id = preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $atts['id'] );
+	if ( '' === $id ) {
+		return '';
+	}
 
-	return '<div class="aurora-star-video"><iframe src="https://www.youtube-nocookie.com/embed/' . $id . '" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:' . esc_attr( $atts['width'] ) . '"></iframe></div>';
+	// width 仅接受纯数字或数字 + px/%，避免任意 CSS 值进入 style 属性。
+	$width = trim( (string) $atts['width'] );
+	if ( ! preg_match( '/^\d+(?:\.\d+)?(?:px|%)?$/', $width ) ) {
+		$width = '100%';
+	}
+
+	return '<div class="aurora-star-video"><iframe src="https://www.youtube-nocookie.com/embed/' . esc_attr( $id ) . '" title="' . esc_attr__( 'YouTube 视频', 'aurora-star' ) . '" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:' . esc_attr( $width ) . '"></iframe></div>';
 }
 add_shortcode( 'youtube', 'aurora_star_sc_youtube' );
 
@@ -367,12 +379,3 @@ function aurora_star_sc_notice( $atts, $content = '' ) {
 	return '<div class="aurora-star-notice">' . do_shortcode( $content ) . '</div>';
 }
 add_shortcode( 'notice', 'aurora_star_sc_notice' );
-
-/**
- * 文章页禁用目录的快捷方式（需要后台编辑插入 meta，此函数供模板判断）。
- *
- * @return void
- */
-function aurora_star_shortcodes_admin_notice() {
-	// 保留占位，说明短码均在自定义器有说明。
-}

@@ -30,7 +30,8 @@
 	}
 
 	function init() {
-		// 防止闪烁：在 DOM 渲染前应用主题。
+		// 本脚本在 <head> 中同步执行，此时 documentElement 已存在，
+		// 因此在首屏渲染前写入 data-theme，避免暗色用户看到白屏闪烁。
 		var stored = null;
 		try {
 			stored = localStorage.getItem(STORAGE_KEY);
@@ -86,10 +87,9 @@
 	}
 
 	document.addEventListener('DOMContentLoaded', function () {
-		init();
 		bindToggle();
 	});
 
-	// 立即初始化，避免首屏闪烁。
+	// 立即初始化：本脚本位于 <head>，此处在首屏绘制前完成主题写入。
 	init();
 })();

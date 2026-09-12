@@ -41,6 +41,10 @@ function aurora_star_setup() {
 		)
 	);
 
+	// 区块编辑器：add_editor_style() 必须配合 editor-styles 才会在 Gutenberg 中生效。
+	add_theme_support( 'editor-styles' );
+	add_theme_support( 'responsive-embeds' );
+
 	// 自定义 Logo。
 	add_theme_support(
 		'custom-logo',
@@ -62,9 +66,6 @@ function aurora_star_setup() {
 
 	// 选择性刷新。
 	add_theme_support( 'customize-selective-refresh-widgets' );
-
-	// 内容宽度（无编辑器时）。
-	$GLOBALS['content_width'] = 800;
 
 	// 注册导航菜单。
 	register_nav_menus(
@@ -115,16 +116,21 @@ function aurora_star_comment_form_defaults( $defaults ) {
 add_filter( 'comment_form_defaults', 'aurora_star_comment_form_defaults' );
 
 /**
- * 允许 svg 上传（用于图标库）。
+ * 允许上传 WebP（WordPress 5.8+ 已默认允许，此处仅作显式声明）。
+ *
+ * SVG 默认不再开放：SVG 可携带脚本，直接访问附件地址即形成存储型 XSS。
+ * 确有需要请在子主题中自行开放，并务必将上传权限限制在可信用户：
+ *
+ *     add_filter( 'aurora_star_allow_svg_upload', '__return_true' );
  *
  * @param array $mimes 已允许的 MIME 类型。
  * @return array
  */
 function aurora_star_mime_types( $mimes ) {
-	if ( current_user_can( 'manage_options' ) ) {
-		$mimes['svg']  = 'image/svg+xml';
-		$mimes['webp'] = 'image/webp';
+	if ( apply_filters( 'aurora_star_allow_svg_upload', false ) && current_user_can( 'unfiltered_html' ) ) {
+		$mimes['svg'] = 'image/svg+xml';
 	}
+
 	return $mimes;
 }
 add_filter( 'upload_mimes', 'aurora_star_mime_types' );
@@ -139,6 +145,13 @@ function aurora_star_heading_ids( $content ) {
 	if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
 		return $content;
 	}
+
+	// is_main_query() 在次级循环中依然为真（全局 $wp_query 仍是主查询对象），
+	// 因此还要确认当前循环的文章就是主查询对象，否则会生成重复的标题 id。
+	if ( get_queried_object_id() !== get_the_ID() ) {
+		return $content;
+	}
+
 	return aurora_star_ensure_heading_ids( $content );
 }
 
@@ -185,9 +198,12 @@ function aurora_star_lightbox_images( $content ) {
 	}
 
 	return preg_replace_callback(
-		'/<img([^>]*)>/i',
+		// 属性部分允许引号包裹的任意内容（含 ">"），并单独捕获自闭合斜杠，避免生成
+		// `<img ... / data-lightbox>` 这类畸形标记，或把属性注入到其它属性值内部。
+		'/<img\b((?:"[^"]*"|\'[^\']*\'|[^>"\'])*?)(\s*\/?)>/i',
 		function ( $matches ) {
 			$attrs = $matches[1];
+			$close = $matches[2];
 
 			// 跳过 emoji 和已经标记的。
 			if ( preg_match( '/class\s*=\s*["\'][^"\']*wp-smiley[^"\']*["\']/i', $attrs ) ) {
@@ -225,7 +241,7 @@ function aurora_star_lightbox_images( $content ) {
 				$extra .= ' data-full="' . esc_attr( $full ) . '"';
 			}
 
-			return '<img' . $attrs . $extra . '>';
+			return '<img' . $attrs . $extra . $close . '>';
 		},
 		$content
 	);
@@ -247,29 +263,175 @@ function aurora_star_menu_fallback() {
 }
 
 /**
+ * 读取去重 Cookie 中已浏览过的文章 ID。
+ *
+ * @return int[]
+ */
+function aurora_star_get_viewed_posts() {
+	if ( empty( $_COOKIE[ AURORA_STAR_VIEW_COOKIE ] ) ) {
+		return array();
+	}
+
+	$raw = sanitize_text_field( wp_unslash( $_COOKIE[ AURORA_STAR_VIEW_COOKIE ] ) );
+
+	$ids = array();
+	foreach ( explode( '.', $raw ) as $part ) {
+		$id = (int) $part;
+		if ( $id > 0 ) {
+			$ids[] = $id;
+		}
+	}
+
+	return array_slice( array_values( array_unique( $ids ) ), 0, AURORA_STAR_VIEW_COOKIE_MAX );
+}
+
+/**
+ * 是否疑似爬虫 / 监控探针 / 脚本请求。
+ *
+ * @return bool
+ */
+function aurora_star_is_bot() {
+	$ua = isset( $_SERVER['HTTP_USER_AGENT'] )
+		? strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) )
+		: '';
+
+	// 空 UA 基本可判定为脚本或探针。
+	if ( '' === $ua ) {
+		return true;
+	}
+
+	$needles = array(
+		'bot', 'crawl', 'spider', 'slurp', 'curl', 'wget', 'httpclient', 'python-requests',
+		'python-urllib', 'java/', 'go-http-client', 'okhttp', 'libwww', 'monitor', 'lighthouse',
+		'headless', 'pingdom', 'uptime', 'statuscake', 'semrush', 'ahrefs', 'mj12', 'dotbot',
+		'facebookexternalhit', 'telegrambot', 'whatsapp', 'applebot', 'yandex', 'baiduspider',
+		'sogou', '360spider', 'bytespider', 'petalbot', 'gptbot', 'claudebot', 'ccbot',
+		'perplexitybot', 'anthropic',
+	);
+
+	foreach ( $needles as $needle ) {
+		if ( false !== strpos( $ua, $needle ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * 阅读数 +1。
+ *
+ * 用单条 UPDATE 原子自增，避免并发下「读-改-写」丢失计数；同时省掉一次 SELECT。
+ *
+ * @param int $post_id 文章 ID。
+ * @return void
+ */
+function aurora_star_increment_views( $post_id ) {
+	global $wpdb;
+
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+	$updated = $wpdb->query(
+		$wpdb->prepare(
+			"UPDATE {$wpdb->postmeta} SET meta_value = meta_value + 1 WHERE post_id = %d AND meta_key = %s ORDER BY meta_id ASC LIMIT 1",
+			$post_id,
+			AURORA_STAR_VIEW_META
+		)
+	);
+
+	// 首访时还没有 meta 行；add_post_meta(..., true) 保证并发下只插入一次。
+	if ( ! $updated ) {
+		add_post_meta( $post_id, AURORA_STAR_VIEW_META, 1, true );
+	}
+
+	wp_cache_delete( $post_id, 'post_meta' );
+}
+
+/**
+ * 获取文章阅读数。
+ *
+ * @param int $post_id 文章 ID，0 表示当前文章。
+ * @return int
+ */
+function aurora_star_get_views( $post_id = 0 ) {
+	$post_id = $post_id ? (int) $post_id : get_the_ID();
+
+	if ( ! $post_id ) {
+		return 0;
+	}
+
+	return (int) get_post_meta( $post_id, AURORA_STAR_VIEW_META, true );
+}
+
+/**
  * 记录文章阅读数。
+ *
+ * 挂在 template_redirect 上（而非 wp_head），因为 setcookie() 必须在任何输出之前调用，
+ * 否则在关闭 PHP 输出缓冲的环境下会触发 “headers already sent”。
  */
 function aurora_star_track_views() {
-	if ( ! is_singular( 'post' ) ) {
+	// 仅统计单篇文章的正常 GET 请求。
+	if ( ! is_singular( 'post' ) || is_preview() || is_customize_preview() || is_feed() || is_robots() || is_trackback() ) {
 		return;
 	}
 
-	$post_id = get_the_ID();
-	if ( ! $post_id || is_user_logged_in() ) {
+	if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || 'GET' !== strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) ) {
 		return;
 	}
 
-	// 基于 cookie 简单去重，防止刷新刷量。
-	$cookie = isset( $_COOKIE['aurora_star_views'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['aurora_star_views'] ) ) : '';
-
-	if ( false !== strpos( $cookie, "|{$post_id}|" ) ) {
+	if ( wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 		return;
 	}
 
-	$views = (int) get_post_meta( $post_id, 'aurora_star_views', true );
-	update_post_meta( $post_id, 'aurora_star_views', $views + 1 );
+	/**
+	 * 是否统计当前请求。
+	 *
+	 * @param bool $track 默认 true。
+	 */
+	if ( ! apply_filters( 'aurora_star_should_track_view', true ) ) {
+		return;
+	}
 
-	$new_cookie = $cookie . '|' . $post_id . '|';
-	setcookie( 'aurora_star_views', $new_cookie, time() + DAY_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), false );
+	// 登录用户默认不计数，避免作者自刷。
+	if ( is_user_logged_in() && ! apply_filters( 'aurora_star_count_logged_in_views', false ) ) {
+		return;
+	}
+
+	// 爬虫与探针不计入。
+	if ( aurora_star_is_bot() ) {
+		return;
+	}
+
+	$post_id = get_queried_object_id();
+	if ( ! $post_id ) {
+		return;
+	}
+
+	$viewed = aurora_star_get_viewed_posts();
+	if ( in_array( $post_id, $viewed, true ) ) {
+		return;
+	}
+
+	aurora_star_increment_views( $post_id );
+
+	// 只保留最近 N 篇：Cookie 体积恒定，不会随浏览过的文章数无限增长。
+	array_unshift( $viewed, $post_id );
+	$viewed = array_slice( array_values( array_unique( $viewed ) ), 0, AURORA_STAR_VIEW_COOKIE_MAX );
+	$value  = implode( '.', $viewed );
+
+	setcookie(
+		AURORA_STAR_VIEW_COOKIE,
+		$value,
+		array(
+			'expires'  => time() + YEAR_IN_SECONDS,
+			'path'     => COOKIEPATH ? COOKIEPATH : '/',
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		)
+	);
+
+	// 同一请求内如需再次读取，保持一致。
+	$_COOKIE[ AURORA_STAR_VIEW_COOKIE ] = $value;
 }
-add_action( 'wp_head', 'aurora_star_track_views', 1 );
+add_action( 'template_redirect', 'aurora_star_track_views' );
