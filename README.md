@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.3-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.4-6366f1?style=flat-square)
 
 </div>
 
@@ -202,6 +202,25 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v1.5.4** — 与 Markdown 发布器共存时的 `[code]` 修复
+
+- **修复** `[code]` 正文里只要有空行，用在 Markdown 发布器（`wp-markdown-publisher`）
+  的 `[markdown]` 区块或 Markdown 文章里时，代码块会出现字面量 `&lt;/p&gt;` 与 `&lt;p&gt;`。
+  插件先把正文渲染成 HTML 段落，含空行的短码被拆成两段并注入 `</p>`/`<p>`。
+  现由 `aurora_star_repair_code_paragraphs()` 把这类**孤立**段落标签还原成空行；
+  成对出现在同一行的 `<p>foo</p>`（HTML 教学示例）不受影响
+- **修复** 块级用法下（短码标签独占一行），Markdown 渲染器产出的
+  `<p>[code …]</p>` 段落包裹只会被 `[code]` 保护过滤器吃掉一半，残留的 `<p>`
+  让 `wpautop` 补出 `<p><pre>…</pre></p>` 这种非法嵌套（浏览器会提前闭合 `<p>`，
+  多出一个空段落）。现把开/闭标签外层的整对 `<p>` 一起吃掉，
+  且只在开标签确实带 `<p>` 时才吃闭标签后的 `</p>`，
+  不误伤 `<p>文字 [code]…[/code]</p>` 这种行内用法
+- **验证** 新增主题 × 插件集成测试：用真实 WP 核心（`shortcodes.php` /
+  `formatting.php` / `kses.php`）、真实主题文件与**真实插件类**
+  （`Mdp_Markdown` / `Mdp_Shortcodes` / `Mdp_Frontend`）按真实注册顺序跑
+  `the_content` 管线，47 项断言全部通过
+- 配套修复见 Markdown 发布器 **v1.0.1**
 
 **v1.5.3** — 不让代码块里的短码被执行
 

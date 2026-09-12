@@ -299,6 +299,48 @@ function aurora_star_sc_accordion_item( $atts, $content = '' ) {
 add_shortcode( 'accordion-item', 'aurora_star_sc_accordion_item' );
 
 /**
+ * 清理内容管线在 [code] 正文里注入的段落包裹。
+ *
+ * 有些内容处理器（Markdown 插件、区块编辑器转换等）会先把正文渲染成 HTML 段落，
+ * 再交给 do_shortcode。含空行的短码会被拆成两个 <p>：
+ *
+ *     <p>[code lang="php"]
+ *     a = 1</p>
+ *     <p>b = 2
+ *     [/code]</p>
+ *
+ * 于是 [code] 拿到的正文变成 "…a = 1</p>\n<p>b = 2…"。这两个标签是段落标记而非代码，
+ * 却会被下面的 htmlspecialchars() 转义成字面量，代码块里因此出现 &lt;/p&gt; 和 &lt;p&gt;。
+ *
+ * 只处理"孤立"的段落标签：</p> 所在行没有配对的 <p>，且下一行行首的 <p> 所在行没有
+ * 配对的 </p>。像 HTML 代码示例那样成对出现在同一行的 <p>foo</p> 不受影响。
+ *
+ * @param string $code 代码原文。
+ * @return string
+ */
+function aurora_star_repair_code_paragraphs( $code ) {
+	if ( false === stripos( $code, '</p>' ) || false === stripos( $code, '<p>' ) ) {
+		return $code;
+	}
+
+	$repaired = preg_replace_callback(
+		'#^(?<before>[^\n]*?)</p>[ \t]*\n(?:[ \t]*\n)*[ \t]*<p>(?<after>[^\n]*)$#im',
+		function ( $matches ) {
+			// 同一行还有另一个 <p> 或 </p>，说明是真实成对的段落元素，保持原样。
+			if ( preg_match( '#<p\b#i', $matches['before'] ) || preg_match( '#</p>#i', $matches['after'] ) ) {
+				return $matches[0];
+			}
+
+			// 这一对孤立标签本来就是"空行"被段落化的结果，还原成空行。
+			return $matches['before'] . "\n\n" . $matches['after'];
+		},
+		$code
+	);
+
+	return ( null === $repaired ) ? $code : $repaired;
+}
+
+/**
  * [code] 代码高亮。
  * 用法：[code lang="php" line="true"]代码[/code]
  *
@@ -321,6 +363,7 @@ function aurora_star_sc_code( $atts, $content = '' ) {
 	$code = preg_replace( '/<\/pre>$/i', '', $code );
 	$code = preg_replace( '/^<code[^>]*>/i', '', $code );
 	$code = preg_replace( '/<\/code>$/i', '', $code );
+	$code = aurora_star_repair_code_paragraphs( $code );
 	$code = html_entity_decode( $code, ENT_QUOTES | ENT_HTML5, get_bloginfo( 'charset' ) );
 
 	// 别名归一化（c++ → cpp 等）；sanitize_html_class 会剥掉 + / #，不能直接用。
@@ -357,6 +400,14 @@ add_shortcode( 'code', 'aurora_star_sc_code' );
  * 内容变成单行、不含换行，wpautop 无从下手，其它基于正则改 HTML 的过滤器
  * （例如给正文标题补目录锚点的 aurora_star_heading_ids）也不会误伤代码示例。
  *
+ * 正则同时吃掉短码开/闭标签外层的 <p> 段落包裹。块级用法下（短码标签独占一行）
+ * Markdown 插件等渲染器会产出 `<p>[code …]</p>` 与 `<p>[/code]</p>`：
+ * 只替换短码本身，这对 <p> 就会残缺一个——开标签前的 <p> 失去收尾，
+ * wpautop 随后会替它补一个 </p>，于是正文里出现 `<p><pre>…</pre></p>` 这种非法嵌套；
+ * 而那个 </p> 还会被卷进 base64 正文，变成代码里的字面量。
+ * 因此整对包裹一起吃掉，并且只在开标签确实带 <p> 时才吃闭标签后的 </p>，
+ * 避免误伤 `<p>文字 [code]…[/code]</p>` 这种行内用法。
+ *
  * @param string $content 文章内容。
  * @return string
  */
@@ -366,12 +417,12 @@ function aurora_star_protect_code_shortcode( $content ) {
 	}
 
 	return preg_replace_callback(
-		'/\[code(\s[^\]]*)?\](.*?)\[\/code\]/is',
+		'#(?:(<p>)\s*)?\[code(\s[^\]]*)?\](?:</p>\s*(?!\[/code\]))?(.*?)\[/code\](?(1)(?:\s*</p>)?)#is',
 		function ( $matches ) {
-			$atts = isset( $matches[1] ) ? $matches[1] : '';
+			$atts = isset( $matches[2] ) ? $matches[2] : '';
 
 			// 用 base64 承载原文，避免被 wpautop 或其它过滤器改动。
-			return '[aurora_star_code' . $atts . ']' . base64_encode( $matches[2] ) . '[/aurora_star_code]';
+			return '[aurora_star_code' . $atts . ']' . base64_encode( $matches[3] ) . '[/aurora_star_code]';
 		},
 		$content
 	);
