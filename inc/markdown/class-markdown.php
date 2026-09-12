@@ -23,7 +23,7 @@ if ( class_exists( 'Mdp_Markdown', false ) ) {
 class Mdp_Markdown {
 
 	/** 解析器版本（用于判断文章是否需要重新渲染）。 */
-	const VERSION = '1.0.0';
+	const VERSION = '1.0.1';
 
 	/** 行内占位符分隔符。 */
 	const PH = "\x1A";
@@ -527,6 +527,10 @@ class Mdp_Markdown {
 	/**
 	 * 生成 slug（保留中日韩字符）。
 	 *
+	 * 刻意对齐 GitHub 的锚点算法：**空白逐个变成 `-`，且不折叠连续的 `-`**。
+	 * 文档里的目录通常是手写的 GitHub 风格锚点（例如「暗黑 / 明亮模式」写作
+	 * `#4-暗黑--明亮模式`，斜杠两侧各留一个 `-`），一旦折叠就对不上了。
+	 *
 	 * @param string $text 文本。
 	 * @return string
 	 */
@@ -535,7 +539,6 @@ class Mdp_Markdown {
 		$text = strtolower( trim( $text ) );
 		$text = preg_replace( '/[\s_]+/u', '-', $text );
 		$text = preg_replace( '/[^\p{L}\p{N}\-]+/u', '', $text );
-		$text = preg_replace( '/-{2,}/', '-', $text );
 		return trim( $text, '-' );
 	}
 

@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-2.0.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.0.1-6366f1?style=flat-square)
 
 </div>
 
@@ -205,6 +205,27 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.0.1** — 修复行内 `<code>` 里的短码被当成真短码执行
+
+线上文章 https://8u8.club 的「使用文档」页面从第 8.1 节起整段变成转义文本、
+8.2–10.6 的标题全部消失，就是这个问题。
+
+- **修复**（严重）Markdown 里写 `` `[code]` `` 会渲染成 `<code>[code]</code>`。
+  它不在 `<pre>` 内，于是被 `aurora_star_protect_code_shortcode()` 当成真短码，
+  一路吞到文档里下一个 `[/code]`——中间整段正文被 base64 化并渲染成一个代码块，
+  标题等结构全部被转义成文本。同理 `` `[markdown]` `` 会被真的执行成空块。
+  现在 `aurora_star_escape_pre_content()` 同时处理 `<pre>` 与行内 `<code>`，
+  两者里的方括号都转成实体
+- **修复** 标题锚点与 GitHub 不再一致：`slugify()` 会把连续的 `-` 折叠成一个，
+  而 GitHub（以及文档里手写的目录锚点）不折叠。「4. 暗黑 / 明亮模式」生成
+  `4-暗黑-明亮模式`，而文档链接是 `#4-暗黑--明亮模式`，于是目录点了没反应。
+  现在对齐 GitHub 算法，不再折叠
+- **提示** 旧文章里已经生成的标题 id 需要重新渲染才会更新：
+  解析器版本已升到 1.0.1，后台会提示，用 **Markdown 发布 → 批量重新渲染** 即可
+- **验证** 新增 `test-doc-render.php`：把主题自己的 `使用文档.md` 与 `README.md`
+  过一遍真实管线，断言正文无被转义 HTML、无未执行短码、页内锚点全部有目标、
+  无 `<p><pre>` 非法嵌套；短代码测试新增 R10–R12
 
 **v2.0.0** — Markdown 发布插件并入主题
 

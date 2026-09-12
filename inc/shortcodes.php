@@ -428,26 +428,31 @@ function aurora_star_protect_code_shortcode( $content ) {
 	);
 }
 /**
- * 把 <pre> 内的短码语法转义，避免被 do_shortcode 执行。
+ * 把 <pre> 与行内 <code> 里的短码语法转义，避免被 do_shortcode 执行。
  *
- * WordPress 核心并不会保护 <pre> 里的短码。当正文里出现
+ * WordPress 核心并不会保护代码元素里的短码。当正文里出现
  * `<pre><code>[button href="…"]…[/button]</code></pre>`（Markdown 插件、Gutenberg
  * 代码块、或直接粘贴的文档）时，短码会被真的执行，代码示例因此变成渲染后的 UI。
  * 若属性里的引号已被转义（&quot;），还会解析出 `quotprimaryquot` 这种垃圾类名。
  *
- * <pre> 是预格式文本，里面的方括号只应作为文字显示，因此这里把 [ ] 转成实体；
+ * **行内 <code> 同样必须处理。** Markdown 里写 `` `[code]` `` 会渲染成
+ * `<code>[code]</code>`；它不在 <pre> 内，于是会被 aurora_star_protect_code_shortcode()
+ * 当成真短码，一路吞到文档里下一个 `[/code]` 为止——整段正文被 base64 化并变成
+ * 一个代码块，标题等结构全部被转义成文本。同理 `` `[markdown]` `` 会被真的执行成空块。
+ *
+ * 代码元素里的方括号只应作为文字显示，因此这里把 [ ] 转成实体；
  * 浏览器仍显示为 [ ]，但 do_shortcode 不再匹配。
  *
  * @param string $content 文章内容。
  * @return string
  */
 function aurora_star_escape_pre_content( $content ) {
-	if ( false === stripos( $content, '<pre' ) ) {
+	if ( false === stripos( $content, '<pre' ) && false === stripos( $content, '<code' ) ) {
 		return $content;
 	}
 
 	return preg_replace_callback(
-		'#<pre\b[^>]*>.*?</pre>#is',
+		'#<(pre|code)\b[^>]*>.*?</\1>#is',
 		function ( $matches ) {
 			return str_replace( array( '[', ']' ), array( '&#91;', '&#93;' ), $matches[0] );
 		},
@@ -458,7 +463,7 @@ function aurora_star_escape_pre_content( $content ) {
 /**
  * 在 wpautop / do_shortcode 之前统一保护正文里的代码内容。
  *
- * 顺序很重要：先转义 <pre> 内的方括号，再处理 [code] 短码。
+ * 顺序很重要：先转义代码元素（<pre> 与行内 <code>）内的方括号，再处理 [code] 短码。
  * 反过来的话，写在 <pre> 里的 [code] 会先被换成占位短码，随后仍会被执行。
  *
  * @param string $content 文章内容。
