@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.4-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.0.0-6366f1?style=flat-square)
 
 </div>
 
@@ -24,6 +24,7 @@
 | 🎨 **Font Awesome 7** | 全量自托管，菜单项可直接填写图标类名（如 `fa-solid fa-home`） |
 | 🧭 **全局浮动导航** | 右下角返回顶部 + 分享（微博 / QQ / 复制链接） |
 | 🔧 **短码系统** | `[button]` `[alert]` `[tabs]` `[accordion]` `[code]` `[youtube]` `[icon]` 等 |
+| ✍️ **Markdown 写作** | 内置 Markdown 编辑器（工具栏 + 实时预览）、`.md` 批量导入、GFM 扩展（表格 / 任务列表 / 脚注 / 目录）、批量重新渲染、WP-CLI，**无需再装插件** |
 | 🌌 **极光背景** | 浅色/暗色主题各自适配的极光背景图，一键开关 |
 | 🏷️ **备案信息** | ICP + 公安备案（带本地化徽章），**单独成行**，留空自动隐藏 |
 | 🔗 **友情链接** | 独立的「友情链接」菜单位置，页脚自动渲染；未分配时不输出 |
@@ -187,13 +188,15 @@ aurora-star/
 │   ├── menu-walker.php    # 菜单图标
 │   ├── comments.php       # 评论增强（头像 / 归属地 / UA）
 │   ├── geoip-admin.php    # IP 数据库后台上传与状态
-│   └── admin-menu.php     # 后台一级菜单
+│   ├── admin-menu.php     # 后台一级菜单
+│   └── markdown/          # Markdown 发布模块（见其中 README）
 ├── assets/
 │   ├── css/               # 主题样式（含暗色、灯箱、目录等）
 │   ├── js/                # 主题脚本
 │   ├── img/               # 极光背景图、默认头像
 │   ├── geoip/             # GeoLite2 数据库放置目录（见其中 README）
 │   ├── icons/             # Font Awesome 7（自托管）
+│   ├── markdown/          # Markdown 模块的后台与前台资源
 │   └── vendor/
 │       ├── prism/             # Prism.js（自托管）
 │       ├── maxmind-db-reader/ # MaxMind DB 读取库（Apache-2.0）
@@ -202,6 +205,25 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.0.0** — Markdown 发布插件并入主题
+
+- **集成** 独立插件 `wp-markdown-publisher` 的全部功能并入主题 `inc/markdown/`：
+  Markdown 编辑器（工具栏 + 实时预览）、`.md` / `.zip` 批量导入、front matter、
+  GFM 扩展（表格 / 任务列表 / 脚注 / 目录）、批量重新渲染、REST 接口、WP-CLI。
+  **插件已退役，无需再安装**
+- **兼容** 选项名与文章元数据键名原样保留（`mdp_settings`、`_mdp_markdown` 等），
+  已有文章的 Markdown 原文、渲染状态与全部设置无缝继承；主题与插件可随时互换。
+  文章正文始终保存渲染后的 HTML，即使日后停用本主题，内容也不会丢
+- **守卫** 检测到独立插件仍在启用时，主题内置模块整体让路并给出后台提示，
+  避免"双重渲染"；`mdp()` 快捷函数带 `function_exists` 守卫保留，已有自定义代码不受影响
+- **解耦** 主题与模块在 `the_content` 的过滤器优先级不再撞档：
+  预渲染从 8 降到 7、`maybe_render_source` 从 7 降到 6，
+  执行顺序从"靠注册顺序"变成"靠优先级显式确定"，原先那类冲突从根上消失
+- **生命周期** 用 `after_switch_theme` 对应插件的激活钩子，
+  用 `switch_theme` 对应 `uninstall.php` 的清理
+- **验证** 199 项 Markdown 模块断言全部通过（集成 47 + 守卫与接线 41 +
+  解析器 69 + 导入 83），主题原有测试同步全绿
 
 **v1.5.4** — 与 Markdown 发布器共存时的 `[code]` 修复
 

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AURORA_STAR_VERSION', '1.5.4' );
+define( 'AURORA_STAR_VERSION', '2.0.0' );
 define( 'AURORA_STAR_DIR', get_template_directory() );
 define( 'AURORA_STAR_URI', get_template_directory_uri() );
 
@@ -28,3 +28,7 @@ require_once AURORA_STAR_DIR . '/inc/menu-walker.php';
 require_once AURORA_STAR_DIR . '/inc/comments.php';
 require_once AURORA_STAR_DIR . '/inc/geoip-admin.php';
 require_once AURORA_STAR_DIR . '/inc/admin-menu.php';
+
+// Markdown 发布模块（由 wp-markdown-publisher 插件集成而来）。
+// 内部自带守卫：检测到独立插件仍在启用时整个模块让路。
+require_once AURORA_STAR_DIR . '/inc/markdown/bootstrap.php';

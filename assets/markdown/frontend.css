@@ -1,0 +1,139 @@
+/* Markdown 发布器：前台样式（可通过设置关闭） */
+.mdp-markdown-post .mdp-pre,
+.mdp-content .mdp-pre {
+	background: #f6f8fa;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	padding: 14px 16px;
+	overflow: auto;
+	line-height: 1.6;
+	font-size: 13.5px;
+}
+
+.mdp-markdown-post .mdp-pre code,
+.mdp-content .mdp-pre code {
+	background: none;
+	padding: 0;
+	font-size: inherit;
+	color: inherit;
+	white-space: pre;
+}
+
+.mdp-markdown-post :not(.mdp-pre) > code,
+.mdp-content :not(.mdp-pre) > code {
+	background: rgba(175, 184, 193, 0.22);
+	border-radius: 4px;
+	padding: 0.15em 0.4em;
+	font-size: 0.9em;
+}
+
+.mdp-table-wrap {
+	overflow-x: auto;
+	margin: 1.2em 0;
+}
+
+.mdp-markdown-post table,
+.mdp-content table {
+	border-collapse: collapse;
+	width: 100%;
+	font-size: 0.96em;
+}
+
+.mdp-markdown-post table th,
+.mdp-markdown-post table td,
+.mdp-content table th,
+.mdp-content table td {
+	border: 1px solid #e0e0e0;
+	padding: 8px 12px;
+}
+
+.mdp-markdown-post table thead th,
+.mdp-content table thead th {
+	background: #f6f8fa;
+}
+
+.mdp-task-item {
+	list-style: none;
+	margin-left: -1.2em;
+}
+
+.mdp-task {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+/* 目录 */
+.mdp-toc {
+	background: #f8f9fa;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	padding: 14px 18px;
+	margin: 1.5em 0;
+	font-size: 0.96em;
+}
+
+.mdp-toc-title {
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.mdp-toc-list {
+	margin: 0 0 0 1.2em;
+	padding: 0;
+}
+
+.mdp-toc-depth-1 {
+	margin-left: 1.1em;
+}
+
+.mdp-toc-item {
+	margin: 4px 0;
+}
+
+.mdp-toc-item a {
+	text-decoration: none;
+}
+
+.mdp-toc-item a:hover {
+	text-decoration: underline;
+}
+
+/* 脚注 */
+.mdp-footnotes {
+	margin-top: 2.5em;
+	font-size: 0.92em;
+	color: #3c434a;
+}
+
+.mdp-fn-sep {
+	border: 0;
+	border-top: 1px solid #e0e0e0;
+	margin-bottom: 1em;
+}
+
+.mdp-fn-list {
+	margin-left: 1.4em;
+}
+
+.mdp-fn-item {
+	margin: 6px 0;
+}
+
+.mdp-fn-ref a {
+	text-decoration: none;
+}
+
+.mdp-fn-back {
+	text-decoration: none;
+	opacity: 0.7;
+}
+
+/* 标题锚点偏移（配合固定头部主题） */
+.mdp-markdown-post h1[id],
+.mdp-markdown-post h2[id],
+.mdp-markdown-post h3[id],
+.mdp-markdown-post h4[id],
+.mdp-markdown-post h5[id],
+.mdp-markdown-post h6[id] {
+	scroll-margin-top: 80px;
+}

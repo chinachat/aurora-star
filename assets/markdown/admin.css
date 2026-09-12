@@ -1,0 +1,337 @@
+/* Markdown 发布器：后台样式 */
+.mdp-wrap .mdp-lead {
+	max-width: 900px;
+	font-size: 14px;
+	color: #50575e;
+}
+
+.mdp-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 20px;
+	align-items: flex-start;
+}
+
+.mdp-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	padding: 16px 20px 20px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	margin-bottom: 20px;
+	flex: 1 1 420px;
+	min-width: 320px;
+	box-sizing: border-box;
+}
+
+.mdp-card h2 {
+	margin-top: 4px;
+	font-size: 15px;
+}
+
+.mdp-card--main {
+	flex: 3 1 560px;
+}
+
+.mdp-card--side {
+	flex: 1 1 320px;
+	max-width: 480px;
+}
+
+.mdp-check {
+	display: block;
+	margin: 6px 0;
+}
+
+.mdp-inline-label {
+	display: inline-block;
+	margin-left: 16px;
+}
+
+/* 拖放区 */
+.mdp-dropzone {
+	border: 2px dashed #c3c4c7;
+	border-radius: 8px;
+	padding: 24px 16px;
+	text-align: center;
+	background: #fbfbfc;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mdp-dropzone.is-dragover {
+	border-color: #2271b1;
+	background: #f0f6fc;
+}
+
+.mdp-dropzone__icon {
+	font-size: 26px;
+	line-height: 1;
+	color: #2271b1;
+	margin-bottom: 6px;
+}
+
+.mdp-dropzone__title {
+	margin: 4px 0;
+	font-weight: 600;
+}
+
+.mdp-dropzone__hint {
+	margin: 4px 0 12px;
+	color: #646970;
+}
+
+.mdp-file-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+}
+
+.mdp-filelist {
+	margin: 14px 0 0;
+	padding: 0;
+	list-style: none;
+	text-align: left;
+	max-height: 180px;
+	overflow: auto;
+}
+
+.mdp-filelist li {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	padding: 4px 8px;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 13px;
+}
+
+.mdp-filelist button {
+	background: none;
+	border: 0;
+	color: #b32d2e;
+	cursor: pointer;
+}
+
+/* 进度与结果 */
+.mdp-progress {
+	margin: 16px 0;
+}
+
+.mdp-progress__bar {
+	height: 10px;
+	background: #f0f0f1;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.mdp-progress__bar span {
+	display: block;
+	height: 100%;
+	width: 0;
+	background: #2271b1;
+	transition: width 0.2s ease;
+}
+
+.mdp-progress__text {
+	margin-top: 6px;
+	font-size: 13px;
+	color: #50575e;
+}
+
+.mdp-results {
+	margin-top: 16px;
+}
+
+.mdp-results .mdp-status {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 10px;
+	font-size: 12px;
+	line-height: 1.8;
+	color: #fff;
+}
+
+.mdp-status--created { background: #00a32a; }
+.mdp-status--updated { background: #2271b1; }
+.mdp-status--skipped { background: #dba617; }
+.mdp-status--error { background: #d63638; }
+
+.mdp-table {
+	margin-top: 10px;
+}
+
+.mdp-code-sample {
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 10px 12px;
+	overflow: auto;
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.mdp-code-sample code,
+.mdp-code-sample {
+	font-family: Consolas, Monaco, "Andale Mono", monospace;
+}
+
+.mdp-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 18px;
+}
+
+.mdp-log {
+	margin-top: 14px;
+	max-height: 260px;
+	overflow: auto;
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 10px;
+	display: none;
+}
+
+.mdp-log.is-visible {
+	display: block;
+}
+
+.mdp-list {
+	list-style: disc;
+	margin-left: 20px;
+}
+
+/* 编辑器元框 */
+.mdp-editor {
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.mdp-editor__bar,
+.mdp-editor__foot {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 10px;
+	flex-wrap: wrap;
+}
+
+.mdp-editor__bar {
+	border-bottom: 1px solid #f0f0f1;
+	background: #fafafa;
+	border-radius: 6px 6px 0 0;
+}
+
+.mdp-editor__foot {
+	border-top: 1px solid #f0f0f1;
+	font-size: 12px;
+	color: #646970;
+	justify-content: space-between;
+}
+
+.mdp-editor__spacer {
+	flex: 1;
+}
+
+.mdp-hint {
+	color: #646970;
+}
+
+.mdp-stale {
+	color: #b32d2e;
+	font-style: normal;
+}
+
+.mdp-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+}
+
+.mdp-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	padding: 8px 10px;
+	border-bottom: 1px solid #f0f0f1;
+	background: #fff;
+}
+
+.mdp-toolbar__sep {
+	width: 1px;
+	background: #e0e0e0;
+	margin: 2px 4px;
+}
+
+.mdp-source {
+	width: 100%;
+	border: 0;
+	border-radius: 0;
+	padding: 14px 16px;
+	font-family: Consolas, Monaco, "Andale Mono", monospace;
+	font-size: 13.5px;
+	line-height: 1.75;
+	resize: vertical;
+	box-shadow: none;
+	min-height: 320px;
+}
+
+.mdp-source:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+.mdp-source:disabled {
+	background: #f6f7f7;
+	color: #8c8f94;
+}
+
+.mdp-preview {
+	border-top: 1px solid #f0f0f1;
+	max-height: 460px;
+	overflow: auto;
+	padding: 0 16px 16px;
+	background: #fbfbfc;
+}
+
+.mdp-preview__head {
+	padding: 8px 0;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: #646970;
+}
+
+.mdp-preview__body .mdp-toc {
+	border: 1px solid #e5e5e5;
+}
+
+.mdp-editor.is-fullscreen {
+	position: fixed;
+	inset: 16px;
+	z-index: 100000;
+	margin: 0;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+}
+
+.mdp-editor.is-fullscreen .mdp-source {
+	flex: 1;
+	min-height: 0;
+}
+
+.mdp-editor.is-fullscreen .mdp-preview {
+	max-height: 40%;
+}
+
+body.mdp-fullscreen-open {
+	overflow: hidden;
+}
