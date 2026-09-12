@@ -12,9 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <article id="post-<?php the_ID(); ?>" <?php post_class( 'post-card' ); ?>>
 	<a class="post-card__link" href="<?php the_permalink(); ?>">
-		<?php if ( has_post_thumbnail() ) : ?>
+		<?php if ( aurora_star_should_show_card_media() ) : ?>
 			<div class="post-card__media">
-				<?php the_post_thumbnail( 'aurora-star-card', array( 'class' => 'post-card__img' ) ); ?>
+				<?php echo aurora_star_thumbnail_html( 'aurora-star-card', array( 'class' => 'post-card__img' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</div>
 		<?php else : ?>
 			<div class="post-card__media post-card__media--placeholder">

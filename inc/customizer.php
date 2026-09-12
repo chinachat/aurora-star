@@ -515,10 +515,65 @@ function aurora_star_customize_register( $wp_customize ) {
 	$wp_customize->add_control(
 		'aurora_star_show_thumbnail',
 		array(
-			'label'   => __( '文章内显示特色图片', 'aurora-star' ),
+			'label'       => __( '文章内显示特色图片', 'aurora-star' ),
 			'description' => __( '单篇文章/页面顶部是否显示特色大图。', 'aurora-star' ),
-			'section' => 'aurora_star_post',
-			'type'    => 'checkbox',
+			'section'     => 'aurora_star_post',
+			'type'        => 'checkbox',
+		)
+	);
+
+	// 默认特色图：存附件 ID，才能走 wp_get_attachment_image 的 srcset / alt。
+	$wp_customize->add_setting(
+		'aurora_star_default_thumbnail',
+		array(
+			'default'           => 0,
+			'sanitize_callback' => 'absint',
+		)
+	);
+	$wp_customize->add_control(
+		new WP_Customize_Media_Control(
+			$wp_customize,
+			'aurora_star_default_thumbnail',
+			array(
+				'label'       => __( '默认特色图', 'aurora-star' ),
+				'description' => __( '文章没有设置特色图时自动使用这张图。留空则不启用。', 'aurora-star' ),
+				'section'     => 'aurora_star_post',
+				'mime_type'   => 'image',
+			)
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_default_thumbnail_in_list',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_default_thumbnail_in_list',
+		array(
+			'label'       => __( '默认图用于列表缩略图', 'aurora-star' ),
+			'description' => __( '首页 / 归档 / 搜索的卡片缩略图。取消勾选则没有特色图的文章仍显示占位图标。', 'aurora-star' ),
+			'section'     => 'aurora_star_post',
+			'type'        => 'checkbox',
+		)
+	);
+
+	$wp_customize->add_setting(
+		'aurora_star_default_thumbnail_in_single',
+		array(
+			'default'           => true,
+			'sanitize_callback' => 'wp_validate_boolean',
+		)
+	);
+	$wp_customize->add_control(
+		'aurora_star_default_thumbnail_in_single',
+		array(
+			'label'       => __( '默认图用于文章页顶部大图', 'aurora-star' ),
+			'description' => __( '取消勾选后，只有文章自己设置了特色图时才显示大图。', 'aurora-star' ),
+			'section'     => 'aurora_star_post',
+			'type'        => 'checkbox',
 		)
 	);
 

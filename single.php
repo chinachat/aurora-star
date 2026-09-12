@@ -21,9 +21,9 @@ get_header();
 
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'post-single' ); ?>>
 
-			<?php if ( get_theme_mod( 'aurora_star_show_thumbnail', true ) && has_post_thumbnail() ) : ?>
+			<?php if ( aurora_star_should_show_hero() ) : ?>
 				<div class="post-hero">
-					<?php the_post_thumbnail( 'aurora-star-hero', array( 'class' => 'post-hero__img' ) ); ?>
+					<?php echo aurora_star_thumbnail_html( 'aurora-star-hero', array( 'class' => 'post-hero__img' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 			<?php endif; ?>
 

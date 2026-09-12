@@ -7,7 +7,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white)
 ![License](https://img.shields.io/badge/License-GPL%20v2-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-2.1.0-6366f1?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.2.0-6366f1?style=flat-square)
 
 </div>
 
@@ -33,6 +33,7 @@
 | 📤 **IP 库后台上传** | 后台直接上传/更新 IP 库，识别 `.tar.gz` / `.gz` / `.zip` / `.mmdb`，显示构建时间 |
 | 🇨🇳 **简体中文** | 内置 zh_CN 语言包，前后台界面全面中文化 |
 | 🖼️ **特色图** | 文章页大图 + 列表缩略图，可单独关闭文章内显示 |
+| 🩻 **默认特色图** | 没有特色图的文章自动回退到指定图片；列表与文章页可分别开关 |
 | 🧱 **列表布局可切** | 卡片 / 列表 / 紧凑网格三种，桌面列数 2–4 可调，首页 / 归档 / 搜索可分别开关 |
 
 ## 🚀 快速开始
@@ -185,6 +186,7 @@ aurora-star/
 │   ├── enqueue.php        # 资源加载
 │   ├── customizer.php     # 设置选项
 │   ├── layout.php         # 列表布局（卡片 / 列表 / 紧凑网格）
+│   ├── thumbnail.php      # 特色图与默认特色图回退
 │   ├── shortcodes.php     # 短码系统
 │   ├── toc.php            # 服务端目录生成
 │   ├── menu-walker.php    # 菜单图标
@@ -207,6 +209,22 @@ aurora-star/
 ```
 
 ## 📦 发行说明
+
+**v2.2.0** — 默认特色图：没有特色图时自动回退
+
+- **新增** 自定义器 → 文章 → **默认特色图**：文章没有设置特色图时自动使用这张图
+- **新增** 两个位置可分别开关：「默认图用于列表缩略图」「默认图用于文章页顶部大图」。
+  只想让列表有图、不想每篇文章顶部都顶一张通用大图时，关掉后者即可
+- **实现** 存的是**附件 ID** 而非图片 URL，因此走 `wp_get_attachment_image()`，
+  自动带 `srcset` / `sizes` / `alt` / `width` / `height`，并按主题注册的尺寸
+  （列表 640×360、大图 1600×800）裁剪
+- **健壮性** 附件被删除或改成非图片时自动失效，回退到原来的占位图标；
+  文章自己的特色图永远优先
+- **重构** 新增 `inc/thumbnail.php`；`content-card.php` / `single.php` / `page.php`
+  不再直接用 `has_post_thumbnail()`，改走 `aurora_star_should_show_*()` 与
+  `aurora_star_thumbnail_html()`
+- **验证** 新增 `test-thumbnail.php`（47 项）：回退、优先级、失效兜底、
+  两个位置开关互不干扰、与总开关的关系、模板接线
 
 **v2.1.0** — 列表布局可切换：卡片 / 列表 / 紧凑网格
 
